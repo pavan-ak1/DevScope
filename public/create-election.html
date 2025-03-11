@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Election</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="email">contact@example.com</div>
+        <nav>
+            <ul>
+                <li><a href="election-dashboard.html">Dashboard</a></li>
+                <li><a href="manage-elections.html">Manage Elections</a></li>
+            </ul>
+        </nav>
+        <div class="right-section">
+            <button id="increase-font">A+</button>
+            <button id="decrease-font">A-</button>
+            <select id="language">
+                <option>English</option>
+                <option>Kannada</option>
+            </select>
+        </div>
+    </header>
+
+    <main class="dashboard-content">
+        <h1>Create New Election</h1>
+        <form id="create-election-form">
+            <label for="election-title">Election Title:</label>
+            <input type="text" id="election-title" required>
+        
+            <label for="election-start">Start Date:</label>
+            <input type="date" id="election-start" required>
+        
+            <label for="election-end">End Date:</label>
+            <input type="date" id="election-end" required>
+        
+            <button type="submit" class="btn">Create Election</button>
+        </form>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Election Management Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Top Navbar -->
+    <header class="navbar">
+      <div class="email">contact@example.com</div>
+      <nav>
+        <ul>
+          <li><a href="#">Home</a></li>
+          <li class="dropdown">
+            <a href="#">Elections ▼</a>
+            <ul class="dropdown-menu">
+              <li><a href="#">Create Election</a></li>
+              <li><a href="#">Manage Elections</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a href="#">Candidates ▼</a>
+            <ul class="dropdown-menu">
+              <li><a href="#">Add Candidate</a></li>
+              <li><a href="#">Manage Candidates</a></li>
+            </ul>
+          </li>
+          <li><a href="#">Reports</a></li>
+          <li><a href="#">Help Desk</a></li>
+        </ul>
+      </nav>
+      <div class="right-section">
+        <button id="increase-font">A+</button>
+        <button id="decrease-font">A-</button>
+        <select id="language">
+          <option>English</option>
+          <option>ಕನ್ನಡ</option>
+        </select>
+        <div class="profile-icon">👤</div>
+      </div>
+    </header>
+
+    <!-- Sidebar + Main Content -->
+    <div class="dashboard-container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <ul>
+          <li class="active"><a href="#">Dashboard</a></li>
+          <li><a href="#">Elections</a></li>
+          <li><a href="candidates.html">Candidates</a></li>
+          <li><a href="#">Reports</a></li>
+          <li><a href="#">Help Desk</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="dashboard-content">
+        <h1>Election Management Dashboard</h1>
+        <div class="stats">
+          <div class="card">
+            Total Elections: <span id="totalElections">0</span>
+          </div>
+          <div class="card">Total Votes: <span id="totalVotes">0</span></div>
+          <div class="card">
+            Voter Turnout: <span id="voterTurnout">0%</span>
+          </div>
+        </div>
+        <div class="election-actions">
+          <button
+            class="btn"
+            onclick="window.location.href='/create-election.html'"
+          >
+            Create Election
+          </button>
+          <button
+            class="btn"
+            onclick="window.location.href='/manage-elections.html'"
+          >
+            Manage Elections
+          </button>
+        </div>
+
+        <!-- Election List -->
+        <h2>All Elections</h2>
+        <table>
+          <thead>
+              <tr>
+                  <th>Title</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody id="elections-table-body">
+              <!-- Fetched elections will be added here -->
+          </tbody>
+      </table>
+      
+      </main>
+    </div>
+
+    <script src="script.js">async function fetchElections() {
+      try {
+          const response = await fetch("http://localhost:5000/api/v1/elections/");
+          const elections = await response.json();
+
+          if (!Array.isArray(elections)) {
+              console.error("Unexpected API response:", elections);
+              return;
+          }
+
+          const tableBody = document.getElementById("electionsTable");
+          tableBody.innerHTML = ""; // Clear old data
+
+          elections.forEach(election => {
+              const row = document.createElement("tr");
+
+              row.innerHTML = `
+                  <td>${election.title}</td>
+                  <td>${election.description}</td>
+                  <td>${new Date(election.startDate).toLocaleDateString()}</td>
+                  <td>${new Date(election.endDate).toLocaleDateString()}</td>
+                  <td>
+                      <button onclick="viewElection('${election._id}')">View</button>
+                      <button onclick="editElection('${election._id}')">Edit</button>
+                      <button onclick="deleteElection('${election._id}')">Delete</button>
+                  </td>
+              `;
+              tableBody.appendChild(row);
+          });
+      } catch (error) {
+          console.error("Error fetching elections:", error);
+      }
+  }
+
+  fetchElections();</script>
+  </body>
+</html>

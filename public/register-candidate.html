@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Candidate</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Register Candidate</h2>
+        <form id="register-candidate-form">
+            <label for="candidate-name">Name:</label>
+            <input type="text" id="candidate-name" required>
+
+            <label for="party">Party:</label>
+            <select id="party">
+                <option value="">Select Party</option>
+            </select>
+
+            <label for="election">Election:</label>
+            <select id="election">
+                <option value="">Select Election</option>
+            </select>
+
+            <label for="symbol">Symbol:</label>
+            <input type="file" id="symbol" accept="image/*" required>
+
+            <button type="submit">Register Candidate</button>
+        </form>
+    </div>
+
+    <script src="register-candidate.js"></script>
+</body>
+</html>

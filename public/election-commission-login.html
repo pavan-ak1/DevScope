@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Commission Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        input {
+            display: block;
+            width: 80%;
+            margin: 10px auto;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Election Commission Login</h1>
+
+    <div class="container">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button onclick="loginElectionCommission()">Login</button>
+    </div>
+
+    <script>
+        async function loginElectionCommission() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            if (!email || !password) {
+                alert("Please enter email and password!");
+                return;
+            }
+
+            try {
+                const response = await fetch("/api/v1/election-commission/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem("token", data.token);
+                    window.location.href = "election-dashboard.html"; // Redirect to Election Management Dashboard
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                alert("Login failed!");
+            }
+        }
+    </script>
+
+</body>
+</html>

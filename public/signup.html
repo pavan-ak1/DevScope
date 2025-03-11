@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup - Voter Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        input {
+            display: block;
+            width: 80%;
+            margin: 10px auto;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .google-btn {
+            background-color: #db4437;
+        }
+        .google-btn:hover {
+            background-color: #c1351d;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Signup</h1>
+
+    <div class="container">
+        <input type="text" id="name" placeholder="Full Name" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button onclick="signup()">Sign Up</button>
+        <p>or</p>
+        <button class="google-btn" onclick="signupWithGoogle()">Sign up with Google</button>
+        <p>Already have an account? <a href="login.html">Login here</a></p>
+    </div>
+
+    <script src="script.js">
+        function signupWithGoogle() {
+            window.location.href = "/api/v1/auth/google";  // Redirect to Google OAuth
+        }
+
+        
+    </script>
+
+</body>
+</html>
