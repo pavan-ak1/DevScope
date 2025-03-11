@@ -1,0 +1,72 @@
+const Candidate = require("../models/Candidate");
+const Party = require("../models/Party");
+const Election = require("../models/Election");
+
+// 📌 Register Candidate
+exports.registerCandidate = async (req, res) => {
+    try {
+        const { name, partyId, electionId } = req.body;
+
+        // Validate input
+        if (!name || !partyId || !electionId) {
+            return res.status(400).json({ error: "All fields are required." });
+        }
+
+        // Check if Party & Election exist
+        const party = await Party.findById(partyId);
+        const election = await Election.findById(electionId);
+        if (!party || !election) {
+            return res.status(404).json({ error: "Party or Election not found." });
+        }
+
+        const candidate = new Candidate({ name, party: partyId, election: electionId });
+        await candidate.save();
+
+        res.status(201).json({ message: "Candidate registered successfully.", candidate });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// 📌 Get Candidates for an Election
+exports.getCandidates = async (req, res) => {
+    try {
+        const { electionId } = req.params;
+        const candidates = await Candidate.find({ election: electionId }).populate("party", "name symbol");
+        res.json(candidates);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// 📌 Approve or Reject Candidate
+exports.approveCandidate = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!["approved", "rejected"].includes(status)) {
+            return res.status(400).json({ error: "Invalid status." });
+        }
+
+        const candidate = await Candidate.findByIdAndUpdate(id, { status }, { new: true });
+        if (!candidate) return res.status(404).json({ error: "Candidate not found." });
+
+        res.json({ message: `Candidate ${status} successfully.`, candidate });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// 📌 Delete Candidate
+exports.deleteCandidate = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const candidate = await Candidate.findByIdAndDelete(id);
+        if (!candidate) return res.status(404).json({ error: "Candidate not found." });
+
+        res.json({ message: "Candidate deleted successfully." });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Party Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 🔹 Party Management Styles */
+.container {
+    width: 50%;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+}
+
+.form-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+}
+
+.submit-btn:hover {
+    background-color: #218838;
+}
+
+/* 🔹 Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+}
+
+.party-logo {
+    width: 40px;
+    height: 40px;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Party Management</h2>
+
+        <!-- ✅ Add Party Form -->
+        <form id="party-form">
+            <div class="form-group">
+                <label for="party-name">Party Name</label>
+                <input type="text" id="party-name" placeholder="Enter Party Name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="party-logo">Party Logo (URL)</label>
+                <input type="url" id="party-logo" placeholder="Enter Logo URL" required>
+            </div>
+
+            <div class="form-group">
+                <label for="party-symbol">Party Symbol</label>
+                <input type="text" id="party-symbol" placeholder="Enter Party Symbol" required>
+            </div>
+
+            <button type="submit" class="submit-btn">Add Party</button>
+        </form>
+
+        <!-- ✅ Party List -->
+        <h3>Registered Parties</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Logo</th>
+                    <th>Name</th>
+                    <th>Symbol</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="party-table-body"></tbody>
+        </table>
+    </div>
+
+    <script src="parties.js"></script>
+</body>
+</html>

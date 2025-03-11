@@ -13,6 +13,8 @@ const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const electionCommissionRoutes = require("./routes/electionCommissionRoutes");
 const electionRoutes = require("./routes/electionRoutes");
+const partyRoutes = require("./routes/partyRoutes");
+const candidateRoutes = require("./routes/candidateRoutes");
 
 const app = express();
 app.use(cors());
@@ -32,6 +34,8 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/election-commission", electionCommissionRoutes);
 app.use("/api/v1/elections", electionRoutes);
+app.use("/api/v1/parties", partyRoutes);
+app.use("/api/v1/candidates", candidateRoutes);
 
 const port = process.env.PORT || 5000;
 

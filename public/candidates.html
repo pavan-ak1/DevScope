@@ -3,27 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Candidates</title>
+    <title>Candidate Management</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <h2>Candidate Management</h2>
-        <button onclick="window.location.href='register-candidate.html'">Register Candidate</button>
 
+        <!-- ✅ Register Candidate Form -->
+        <form id="candidate-form">
+            <div class="form-group">
+                <label for="candidate-name">Candidate Name</label>
+                <input type="text" id="candidate-name" placeholder="Enter Candidate Name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="party-select">Select Party</label>
+                <select id="party-select">
+                    <option value="">-- Select Party --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="election-select">Select Election</label>
+                <select id="election-select">
+                    <option value="">-- Select Election --</option>
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn">Register Candidate</button>
+        </form>
+
+        <!-- ✅ Candidate List -->
+        <h3>Registered Candidates</h3>
         <table>
             <thead>
                 <tr>
                     <th>Name</th>
                     <th>Party</th>
                     <th>Election</th>
-                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody id="candidate-table-body">
-                <!-- Candidates will be dynamically inserted here -->
-            </tbody>
+            <tbody id="candidates-table-body"></tbody>
         </table>
     </div>
 
