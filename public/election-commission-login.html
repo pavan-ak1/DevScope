@@ -43,35 +43,46 @@
     </div>
 
     <script>
-        async function loginElectionCommission() {
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
+    async function loginElectionCommission() {
+    localStorage.removeItem("token"); // 🔥 Clear old token before login
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"; // 🔥 Clear cookie
 
-            if (!email || !password) {
-                alert("Please enter email and password!");
-                return;
-            }
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-            try {
-                const response = await fetch("/api/v1/election-commission/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password }),
-                });
+    if (!email || !password) {
+        alert("Please enter email and password!");
+        return;
+    }
 
-                const data = await response.json();
+    try {
+        const response = await fetch("/api/v1/election-commission/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+            credentials: "include",  // ✅ Ensures cookies are stored
+        });
 
-                if (data.success) {
-                    localStorage.setItem("token", data.token);
-                    window.location.href = "election-dashboard.html"; // Redirect to Election Management Dashboard
-                } else {
-                    alert(data.error);
-                }
-            } catch (error) {
-                console.error("Login error:", error);
-                alert("Login failed!");
-            }
+        const data = await response.json();
+
+        if (data.success) {
+            console.log("✅ Login successful! Redirecting...");
+            localStorage.setItem("token", data.token); // ✅ Store new token
+
+            // ✅ Redirect to dashboard
+            window.location.href = "/election-dashboard.html"; 
+        } else {
+            alert(data.error || "Login failed!");
         }
+    } catch (error) {
+        console.error("Login error:", error);
+        alert("Login failed!");
+    }
+}
+
+
+
+
     </script>
 
 </body>

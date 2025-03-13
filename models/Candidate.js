@@ -4,6 +4,7 @@ const CandidateSchema = new mongoose.Schema({
     name: { type: String, required: true },
     party: { type: mongoose.Schema.Types.ObjectId, ref: "Party", required: true },
     election: { type: mongoose.Schema.Types.ObjectId, ref: "Election", required: true },
+    votesReceived: { type: Number, default: 0 },  // Tracks number of votes received
     status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" }
 }, { timestamps: true });
 

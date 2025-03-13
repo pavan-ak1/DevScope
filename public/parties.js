@@ -2,69 +2,154 @@ document.addEventListener("DOMContentLoaded", () => {
     const partyForm = document.getElementById("party-form");
     const partyTableBody = document.getElementById("party-table-body");
 
-    // Function to Fetch Parties from Backend
-    async function fetchParties() {
-        const response = await fetch("http://localhost:5000/api/v1/parties");
-        const data = await response.json();
+    // ✅ API Base URL (Local & Production)
+    const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://your-backend-url.com";
 
-        partyTableBody.innerHTML = ""; // Clear Table
-        data.forEach(party => {
-            const row = `
-                <tr>
-                    <td><img src="${party.logo}" class="party-logo"></td>
-                    <td>${party.name}</td>
-                    <td>${party.symbol}</td>
-                    <td>
-                        <button onclick="editParty('${party._id}')">Edit</button>
-                        <button onclick="deleteParty('${party._id}')">Delete</button>
-                    </td>
-                </tr>
-            `;
-            partyTableBody.innerHTML += row;
-        });
+    // ✅ Get Token from Local Storage
+    function getAuthToken() {
+        return localStorage.getItem("token");
     }
 
-    // Function to Handle Party Registration
-    partyForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const partyData = {
-            name: document.getElementById("party-name").value,
-            logo: document.getElementById("party-logo").value,
-            symbol: document.getElementById("party-symbol").value,
-        };
-
-        await fetch("http://localhost:5000/api/v1/parties", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(partyData),
-        });
-
-        partyForm.reset();
-        fetchParties();
-    });
-
-    // Function to Delete Party
-    async function deleteParty(id) {
-        await fetch(`http://localhost:5000/api/v1/parties/${id}`, { method: "DELETE" });
-        fetchParties();
-    }
-
-    // Function to Edit Party
-    async function editParty(id) {
-        const newName = prompt("Enter new party name:");
-        const newSymbol = prompt("Enter new party symbol:");
-        const newLogo = prompt("Enter new logo URL:");
-
-        if (newName && newSymbol && newLogo) {
-            await fetch(`http://localhost:5000/api/v1/parties/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: newName, symbol: newSymbol, logo: newLogo }),
-            });
-            fetchParties();
+    // ✅ Check Authentication & Redirect If Not Logged In
+    function checkAuthToken() {
+        const token = getAuthToken();
+        if (!token) {
+            console.warn("🚨 No token found! Redirecting to login...");
+            window.location.href = "/election-commission-login.html";
         }
     }
 
-    fetchParties(); // Load Data on Page Load
+    // ✅ Fetch & Display Parties
+    async function fetchParties() {
+        checkAuthToken(); // Ensure User is Authenticated
+
+        try {
+            console.log("📌 Fetching parties...");
+            const response = await fetch(`${API_BASE_URL}/api/v1/parties`, {
+                method: "GET",
+                headers: { Authorization: `Bearer ${getAuthToken()}` },
+                credentials: "include",
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch parties");
+
+            const data = await response.json();
+            console.log("✅ Fetched Parties:", data);
+
+            partyTableBody.innerHTML = ""; // Clear Table
+
+            data.forEach(party => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td><img src="${party.logo}" class="party-logo" onerror="this.src='default-logo.png'"></td>
+                    <td>${party.name}</td>
+                    <td>${party.symbol || "N/A"}</td>
+                    <td>
+                        <button class="edit-btn" data-id="${party._id}">Edit</button>
+                        <button class="delete-btn" data-id="${party._id}">Delete</button>
+                    </td>
+                `;
+                partyTableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error("❌ Error fetching parties:", error);
+        }
+    }
+
+    // ✅ Add Party with Image Upload
+    partyForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        checkAuthToken();
+
+        const formData = new FormData();
+        formData.append("name", document.getElementById("party-name").value);
+        formData.append("symbol", document.getElementById("party-symbol").value);
+        formData.append("logo", document.getElementById("party-logo").files[0]);
+
+        try {
+            console.log("📌 Adding new party...");
+            const response = await fetch(`${API_BASE_URL}/api/v1/parties`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${getAuthToken()}` },
+                body: formData,
+            });
+
+            const data = await response.json();
+            console.log("✅ Server Response:", data);
+
+            if (!response.ok) throw new Error(data.error || "Failed to register party");
+
+            partyForm.reset();
+            fetchParties();
+        } catch (error) {
+            console.error("❌ Error adding party:", error);
+        }
+    });
+
+    // ✅ Edit Party
+    partyTableBody.addEventListener("click", async (e) => {
+        if (!e.target.classList.contains("edit-btn")) return;
+        checkAuthToken();
+
+        const partyId = e.target.dataset.id;
+        const newName = prompt("Enter new party name:");
+        const newSymbol = prompt("Enter new party symbol:");
+
+        if (!newName || !newSymbol) return alert("Party name and symbol are required!");
+
+        const newLogoFile = document.createElement("input");
+        newLogoFile.type = "file";
+        newLogoFile.accept = "image/*";
+
+        newLogoFile.addEventListener("change", async () => {
+            const formData = new FormData();
+            formData.append("name", newName);
+            formData.append("symbol", newSymbol);
+            if (newLogoFile.files[0]) formData.append("logo", newLogoFile.files[0]);
+
+            try {
+                console.log(`📌 Updating party ID: ${partyId}...`);
+                const response = await fetch(`${API_BASE_URL}/api/v1/parties/${partyId}`, {
+                    method: "PUT",
+                    headers: { Authorization: `Bearer ${getAuthToken()}` },
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error("Failed to update party");
+
+                fetchParties();
+            } catch (error) {
+                console.error("❌ Error updating party:", error);
+            }
+        });
+
+        newLogoFile.click();
+    });
+
+    // ✅ Delete Party
+    partyTableBody.addEventListener("click", async (e) => {
+        if (!e.target.classList.contains("delete-btn")) return;
+        checkAuthToken();
+
+        const partyId = e.target.dataset.id;
+        if (!confirm("Are you sure you want to delete this party?")) return;
+
+        try {
+            console.log(`📌 Deleting party ID: ${partyId}...`);
+            const response = await fetch(`${API_BASE_URL}/api/v1/parties/${partyId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${getAuthToken()}` },
+                credentials: "include",
+            });
+
+            if (!response.ok) throw new Error("Failed to delete party");
+
+            fetchParties();
+        } catch (error) {
+            console.error("❌ Error deleting party:", error);
+        }
+    });
+
+    // ✅ Initialize
+    fetchParties();
 });

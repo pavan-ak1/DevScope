@@ -17,11 +17,14 @@ const createElection = async (req, res) => {
 const getElections = async (req, res) => {
     try {
         const elections = await Election.find();
-        res.status(200).json(elections);
+        res.json(elections);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Error fetching elections:", error);
+        res.status(500).json({ message: "Server error" });
     }
 };
+
+
 
 // ✅ Update Election
 const updateElection = async (req, res) => {

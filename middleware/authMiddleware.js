@@ -1,15 +1,21 @@
-const admin = require("firebase-admin");
+const jwt = require("jsonwebtoken");
 
-exports.verifyToken = async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
+const JWT_SECRET = process.env.JWT_SECRET || "f82106d889b7e9d5c89c31a978c1d567";
 
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+exports.authMiddleware = (req, res, next) => {
+    try {
+        const token = req.cookies?.token || req.header("Authorization")?.replace("Bearer ", "");
 
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = decodedToken;
-    next();
-  } catch (error) {
-    res.status(403).json({ error: "Invalid token" });
-  }
+        if (!token) {
+            console.log("❌ No token provided. Redirecting...");
+            return res.status(401).json({ success: false, message: "Access Denied. Please log in again." });
+        }
+
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        console.log("❌ Token verification failed:", error.message);
+        return res.status(403).json({ success: false, message: "Invalid token. Please log in again." });
+    }
 };

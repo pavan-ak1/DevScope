@@ -1,28 +1,14 @@
 const express = require("express");
-const {
-    createElection,
-    getElections,
-    updateElection,
-    deleteElection,
-    getElectionStats,
-    getElectionById
-} = require("../controllers/electionController");
+const { createElection, getElections, updateElection, deleteElection, getElectionStats, getElectionById } = require("../controllers/electionController");
+const { authMiddleware } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// ✅ Fix route: Change `/create` to `/`
-router.post("/", createElection); // POST /api/v1/elections/
-
-// ✅ Fix route: Update GET request
-router.get("/", getElections); // GET /api/v1/elections/
-
-// ✅ Fix route: Update PUT request
-router.put("/:id", updateElection); // PUT /api/v1/elections/:id
-
-// ✅ Fix route: Update DELETE request
-router.delete("/:id", deleteElection); // DELETE /api/v1/elections/:id
-
-router.get("/stats", getElectionStats);
-router.get("/:id", getElectionById);
+router.post("/", authMiddleware, createElection);  // ✅ Protected
+router.get("/", authMiddleware, getElections);  // ✅ Protected
+router.put("/:id", authMiddleware, updateElection);  // ✅ Protected
+router.delete("/:id", authMiddleware, deleteElection);  // ✅ Protected
+router.get("/stats", authMiddleware, getElectionStats);  // ✅ Protected
+router.get("/:id", authMiddleware, getElectionById);  // ✅ Protected
 
 module.exports = router;
