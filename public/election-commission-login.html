@@ -66,7 +66,6 @@
         const data = await response.json();
 
         if (data.success) {
-            console.log("✅ Login successful! Redirecting...");
             localStorage.setItem("token", data.token); // ✅ Store new token
 
             // ✅ Redirect to dashboard

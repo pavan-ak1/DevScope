@@ -111,7 +111,6 @@ async function fetchCandidates(electionId) {
     }
 
     try {
-        console.log(`📌 Fetching candidates for Election ID: ${electionId}`);
 
         const response = await fetch(`http://localhost:5000/api/v1/candidates/${electionId}`, {
             headers: { Authorization: `Bearer ${getAuthToken()}` }
@@ -123,7 +122,6 @@ async function fetchCandidates(electionId) {
         }
 
         const data = await response.json();
-        console.log("🔹 Received Candidates from API:", data);
 
         if (!Array.isArray(data)) {
             console.error("⚠️ API did not return an array. Received:", data);
@@ -145,7 +143,6 @@ function displayCandidates(candidates) {
     const candidatesTable = document.getElementById("candidates-table-body");
     candidatesTable.innerHTML = ""; // ✅ Clear table before adding new data
 
-    console.log("📌 Rendering Candidates in Table:", candidates);
 
     if (candidates.length === 0) {
         candidatesTable.innerHTML = `<tr><td colspan="4">No candidates found</td></tr>`;

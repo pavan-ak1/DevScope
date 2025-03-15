@@ -18,7 +18,6 @@ async function fetchDuplicateVoters() {
         checkAuthToken(); // Ensure user is authenticated
         const token = getAuthToken();
 
-        console.log("📌 Fetching duplicate voters...");
         const response = await fetch("http://localhost:5000/api/v1/voters/duplicates", {
             headers: { 
                 Authorization: `Bearer ${token}`,
@@ -29,7 +28,6 @@ async function fetchDuplicateVoters() {
         if (response.status === 401) return handleUnauthorized();
         
         const data = await response.json();
-        console.log("✅ Duplicate Voters API Response:", data);
 
         if (!Array.isArray(data)) {
             throw new Error("Invalid response format: Expected an array");
@@ -61,7 +59,6 @@ function displayCandidates(voters) {
     }
 
     voters.forEach(voter => {
-        console.log("🔹 Processing voter:", voter);
 
         if (!voter._id || voter._id === "unknown") {
             console.error("❌ Invalid voter _id:", voter);
@@ -100,7 +97,6 @@ async function deleteDuplicateVoter(voterId) {
             return;
         }
 
-        console.log("Deleting voter with ID:", voterId); // Log the voter ID
 
         const response = await fetch(`http://localhost:5000/api/v1/voters/${voterId}`, {
             method: 'DELETE',

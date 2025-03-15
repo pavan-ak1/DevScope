@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
         checkAuthToken(); // Ensure User is Authenticated
 
         try {
-            console.log("📌 Fetching parties...");
             const response = await fetch(`${API_BASE_URL}/api/v1/parties`, {
                 method: "GET",
                 headers: { Authorization: `Bearer ${getAuthToken()}` },
@@ -34,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!response.ok) throw new Error("Failed to fetch parties");
 
             const data = await response.json();
-            console.log("✅ Fetched Parties:", data);
 
             partyTableBody.innerHTML = ""; // Clear Table
 
@@ -67,7 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
         formData.append("logo", document.getElementById("party-logo").files[0]);
 
         try {
-            console.log("📌 Adding new party...");
             const response = await fetch(`${API_BASE_URL}/api/v1/parties`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${getAuthToken()}` },
@@ -75,7 +72,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const data = await response.json();
-            console.log("✅ Server Response:", data);
 
             if (!response.ok) throw new Error(data.error || "Failed to register party");
 
@@ -108,7 +104,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (newLogoFile.files[0]) formData.append("logo", newLogoFile.files[0]);
 
             try {
-                console.log(`📌 Updating party ID: ${partyId}...`);
                 const response = await fetch(`${API_BASE_URL}/api/v1/parties/${partyId}`, {
                     method: "PUT",
                     headers: { Authorization: `Bearer ${getAuthToken()}` },
@@ -135,7 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!confirm("Are you sure you want to delete this party?")) return;
 
         try {
-            console.log(`📌 Deleting party ID: ${partyId}...`);
             const response = await fetch(`${API_BASE_URL}/api/v1/parties/${partyId}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${getAuthToken()}` },

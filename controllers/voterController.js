@@ -1,7 +1,7 @@
 const Voter = require("../models/Voter");
 
 // Verify Voter ID & Eligibility
-exports.verifyVoter = async (req, res) => {
+const verifyVoter = async (req, res) => {
     try {
         const { nationalId } = req.body;
 
@@ -36,9 +36,11 @@ exports.verifyVoter = async (req, res) => {
 };
 
 // Approve or Reject Voter Registration
-exports.approveRejectVoter = async (req, res) => {
+const approveRejectVoter = async (req, res) => {
     try {
         const { voterId, status } = req.body;
+
+        console.log("🔍 Received Request:", voterId, status);
 
         if (!voterId || !["Verified", "Rejected"].includes(status)) {
             return res.status(400).json({ success: false, message: "Invalid voter ID or status" });
@@ -53,25 +55,33 @@ exports.approveRejectVoter = async (req, res) => {
         voter.verified = status === "Verified";
         await voter.save();
 
+        console.log(`✅ Voter ${status.toLowerCase()} successfully`);
         res.status(200).json({ success: true, message: `Voter ${status.toLowerCase()} successfully`, voter });
     } catch (error) {
-        console.error("Error updating voter status:", error);
+        console.error("❌ Error updating voter status:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
 
+
+
+
 // Get All Pending Voters (For Admin)
-exports.getPendingVoters = async (req, res) => {
+const getPendingVoters = async (req, res) => {
     try {
-        const pendingVoters = await Voter.find({ status: "Pending" });
+        const pendingVoters = await Voter.find({ status: "Pending" }) 
+            .select("name email nationalId");  // ✅ Ensure `nationalId` is included
+
         res.json(pendingVoters);
     } catch (error) {
+        console.error("❌ Error fetching pending voters:", error);
         res.status(500).json({ error: error.message });
     }
 };
 
+
 // Detect Duplicate Voters
-exports.detectDuplicateVoters = async (req, res) => {
+const detectDuplicateVoters = async (req, res) => {
     try {
         const duplicates = await Voter.aggregate([
             { $group: { _id: "$nationalId", count: { $sum: 1 }, voters: { $push: "$$ROOT" } } },
@@ -86,7 +96,6 @@ exports.detectDuplicateVoters = async (req, res) => {
             status: d.voters[0].status || "Unknown"
         }));
 
-        console.log("🔹 Sending duplicate voters:", formattedDuplicates);
         res.json(formattedDuplicates);
     } catch (error) {
         console.error("Error detecting duplicates:", error);
@@ -95,7 +104,7 @@ exports.detectDuplicateVoters = async (req, res) => {
 };
 
 
-exports.getDuplicateVoters = async (req, res) => {
+const getDuplicateVoters = async (req, res) => {
     try {
         const duplicates = await Voter.aggregate([
             { $group: { _id: "$nationalId", count: { $sum: 1 }, voters: { $push: "$$ROOT" } } },
@@ -114,22 +123,10 @@ exports.getDuplicateVoters = async (req, res) => {
     }
 };
 
-exports.deleteVoter = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const result = await Voter.findByIdAndDelete(id);
-        if (!result) {
-            return res.status(404).json({ message: "Voter not found" });
-        }
-        res.status(200).json({ message: "Voter deleted successfully" });
-    } catch (error) {
-        console.error("Error deleting voter:", error);
-        res.status(500).json({ message: "Server error" });
-    }
-};
 
 
-exports.deleteVoter = async (req, res) => {
+
+const deleteVoter = async (req, res) => {
     try {
         const { id } = req.params;
         if (!id) {
@@ -147,3 +144,44 @@ exports.deleteVoter = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
+
+
+
+// ✅ Approve Voter
+const approveVoter = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const voter = await Voter.findByIdAndUpdate(id, { status: "Verified" }, { new: true });
+
+        if (!voter) return res.status(404).json({ message: "Voter not found" });
+
+        res.json({ message: "Voter approved successfully", voter });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ✅ Reject Voter
+const rejectVoter = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const voter = await Voter.findByIdAndUpdate(id, { status: "Rejected" }, { new: true });
+
+        if (!voter) return res.status(404).json({ message: "Voter not found" });
+
+        res.json({ message: "Voter rejected successfully", voter });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { 
+    verifyVoter, 
+    getPendingVoters, 
+    detectDuplicateVoters, 
+    deleteVoter, 
+    approveVoter,  // ✅ Ensure these are exported
+    rejectVoter 
+};
+

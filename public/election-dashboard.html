@@ -110,69 +110,40 @@
     <script src="election-dashboard.js"></script>
     <script>
         // Fetch Elections Data
-        async function fetchElections() {
-            try {
-                const response = await fetch("http://localhost:5000/api/v1/elections/");
-                const elections = await response.json();
-
-                const tableBody = document.getElementById("elections-table-body");
-                tableBody.innerHTML = "";
-
-                if (!Array.isArray(elections)) {
-                    console.error("Expected an array of elections");
-                    return;
-                }
-
-                elections.forEach(election => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${election.title}</td>
-                        <td>${new Date(election.startDate).toLocaleDateString()}</td>
-                        <td>${new Date(election.endDate).toLocaleDateString()}</td>
-                        <td>
-                            <button onclick="viewElection('${election._id}')">View</button>
-                            <button onclick="editElection('${election._id}')">Edit</button>
-                            <button onclick="deleteElection('${election._id}')">Delete</button>
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            } catch (error) {
-                console.error("Error fetching elections:", error);
-            }
-        }
-
-        // Fetch Pending Voters Data
         async function fetchPendingVoters() {
-            try {
-                const response = await fetch("http://localhost:5000/api/v1/voters/pending");
-                const voters = await response.json();
+    try {
+        const response = await fetch("http://localhost:5000/api/v1/voters/pending");
 
-                const tableBody = document.getElementById("voter-list");
-                tableBody.innerHTML = "";
-
-                if (!Array.isArray(voters)) {
-                    console.error("Expected an array of voters");
-                    return;
-                }
-
-                voters.forEach(voter => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${voter.name}</td>
-                        <td>${voter.email}</td>
-                        <td>${voter.nationalID}</td>
-                        <td>
-                            <button onclick="approveVoter('${voter._id}')">Approve</button>
-                            <button onclick="rejectVoter('${voter._id}')">Reject</button>
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            } catch (error) {
-                console.error("Error fetching voters:", error);
-            }
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
+
+        const data = await response.json(); // Read response as JSON
+
+        if (!Array.isArray(data)) {
+            throw new Error("Invalid data format: Expected an array of voters.");
+        }
+
+        const tableBody = document.getElementById("voter-list");
+        tableBody.innerHTML = "";
+
+        data.forEach(voter => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${voter.name || "N/A"}</td>
+                <td>${voter.email || "N/A"}</td>
+                <td>${voter.nationalId || "N/A"}</td>  <!-- ✅ Corrected Property Name -->
+                <td>
+                    <button onclick="approveVoter('${voter._id}')">Approve</button>
+                    <button onclick="rejectVoter('${voter._id}')">Reject</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error("Error fetching voters:", error);
+    }
+}
 
         // Approve Voter Function
         async function approveVoter(id) {

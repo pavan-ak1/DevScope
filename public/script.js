@@ -1,24 +1,41 @@
-const tableBody = document.getElementById("electionList");
-
-// ✅ Dynamic API URL (Localhost in Dev, Deployed Backend in Production)
 const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://your-backend-url.com";
 
 // ✅ Run on Page Load
 document.addEventListener("DOMContentLoaded", function () {
-    checkAuthToken(); // Ensure user is logged in
-    fetchDashboardStats();
-    fetchElections();
-    fetchVoterTurnout();
+    checkAuthToken();
+    
+    // Load Elections if on Dashboard
+    if (document.getElementById("elections-table-body")) {
+        fetchElections();
+    }
+
+    // Load Election Details if on Edit Page
+    const urlParams = new URLSearchParams(window.location.search);
+    const electionId = urlParams.get("electionId");
+    if (electionId && document.getElementById("edit-election-form")) {
+        loadElectionDetails(electionId);
+        document.getElementById("edit-election-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+            updateElection(electionId);
+        });
+    }
 });
+// ✅ Safe way to update text content in the dashboard
+function setText(id, text) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.innerText = text;
+    } else {
+        console.warn(`⚠️ Element with ID "${id}" not found.`);
+    }
+}
+
 
 // ✅ Check if Token Exists, Otherwise Redirect to Login
 function checkAuthToken() {
     const token = getAuthToken();
-
     if (!token) {
         const currentPage = window.location.pathname;
-
-        // ✅ Redirect only if the user is not on the login page
         if (!currentPage.includes("login")) {
             redirectToLogin();
         }
@@ -27,39 +44,16 @@ function checkAuthToken() {
 
 // ✅ Fetch Authentication Token
 function getAuthToken() {
-    return localStorage.getItem("token"); // Standardized usage
+    return localStorage.getItem("token");
 }
 
-// ✅ Safe way to update text content
-function setText(id, text) {
-    const element = document.getElementById(id);
-    if (element) element.innerText = text;
+// ✅ Redirect User to Login if Unauthorized
+function redirectToLogin() {
+    localStorage.removeItem("token");
+    window.location.href = "/election-commission-login.html";
 }
 
-// ✅ Fetch Dashboard Stats
-async function fetchDashboardStats() {
-    const token = getAuthToken();
-    if (!token) return redirectToLogin();
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/v1/elections/stats`, {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
-            credentials: "include",
-        });
-
-        if (!response.ok) throw new Error("Unauthorized access");
-
-        const stats = await response.json();
-        setText("totalElections", stats.totalElections || "0");
-        setText("totalVotes", stats.totalVotes || "0");
-        setText("voterTurnout", `${stats.voterTurnout || "0"}%`);
-    } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-    }
-}
-
-// ✅ Fetch Elections
+// ✅ Fetch Elections for Dashboard
 async function fetchElections() {
     const token = getAuthToken();
     if (!token) return redirectToLogin();
@@ -67,77 +61,20 @@ async function fetchElections() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/v1/elections`, {
             method: "GET",
-            headers: { 
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
+            headers: { "Authorization": `Bearer ${token}` },
+            credentials: "include"
         });
 
-        if (response.status === 401) return handleUnauthorized();
         if (!response.ok) throw new Error("Failed to fetch elections");
 
-        const data = await response.json();
-
-        if (!data || !Array.isArray(data.elections)) throw new Error("Invalid data format");
-
-        updateElectionTable(data.elections);
+        const elections = await response.json();
+        updateElectionTable(elections);
     } catch (error) {
         console.error("Error fetching elections:", error);
-        displayErrorInTable("elections-table-body", "Error loading elections. Please try again.");
     }
 }
 
-// ✅ Fetch Voter Turnout
-async function fetchVoterTurnout() {
-    const token = getAuthToken();
-    const electionId = localStorage.getItem("currentElectionId");
-
-    if (!token) return redirectToLogin();
-    if (!electionId) return displayNoElectionSelected();
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/v1/votes/turnout/${electionId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-            credentials: "include",
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch voter turnout");
-
-        const data = await response.json();
-
-        // Check if data is valid and contains the expected properties
-        if (data && typeof data.totalVotes === 'number' && typeof data.turnoutPercentage === 'number') {
-            setText("totalVotes", data.totalVotes.toString());
-            setText("voterTurnout", `${data.turnoutPercentage}%`);
-        } else {
-            displayErrorInTable("voter-turnout-table", "Error loading voter turnout data. Please try again.");
-        }
-    } catch (error) {
-        console.error("Error fetching voter turnout:", error);
-        displayErrorInTable("voter-turnout-table", "Server error. Try again later.");
-    }
-}
-
-// ✅ Auto-Refresh Voter Turnout Every 10 Seconds
-if (window.voterTurnoutInterval) clearInterval(window.voterTurnoutInterval);
-window.voterTurnoutInterval = setInterval(fetchVoterTurnout, 10000);
-
-// ✅ Utility Functions
-function redirectToLogin() {
-    localStorage.removeItem("token");
-    window.location.href = "/election-commission-login.html";
-}
-
-function handleUnauthorized() {
-    redirectToLogin();
-}
-
-function displayNoElectionSelected() {
-    setText("totalVotes", "N/A");
-    setText("voterTurnout", "N/A");
-}
-
+// ✅ Update Election Table
 function updateElectionTable(elections) {
     const electionsTable = document.getElementById("elections-table-body");
     if (!electionsTable) return;
@@ -157,67 +94,146 @@ function updateElectionTable(elections) {
     `).join("");
 }
 
-function displayErrorInTable(tableId, message) {
-    const table = document.getElementById(tableId);
-    if (table) {
-        table.innerHTML = `
-            <tr>
-                <td colspan="4" class="text-center text-danger">${message}</td>
-            </tr>
-        `;
-    }
+// ✅ Redirect to Edit Page with Election ID
+function editElection(electionId) {
+    window.location.href = `edit-election.html?electionId=${electionId}`;
 }
 
-// ✅ Election Commission Login
-async function loginElectionCommission(email, password) {
-    try {
-        const response = await fetch("/api/v1/election-commission/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-        });
-
-        const data = await response.json();
-        if (!data.success) throw new Error(data.error || "Login failed!");
-
-        localStorage.setItem("token", data.token); 
-
-        // ✅ Redirect to Dashboard
-        window.location.href = "/election-dashboard.html";
-    } catch (error) {
-        console.error("Login error:", error);
-        alert(error.message || "Login failed!");
-    }
-}
-
-async function fetchPendingVoters() {
+// ✅ Load Election Details into the Form for Editing
+async function loadElectionDetails(electionId) {
     const token = getAuthToken();
     if (!token) return redirectToLogin();
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/v1/voters/pending`, {
-            method: "GET",
-            headers: { 
-                Authorization: `Bearer ${token}`,
+        const response = await fetch(`${API_BASE_URL}/api/v1/elections/${electionId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch election details");
+
+        const election = await response.json();
+        document.getElementById("election-title").value = election.title;
+        document.getElementById("election-start").value = election.startDate.split("T")[0];
+        document.getElementById("election-end").value = election.endDate.split("T")[0];
+
+    } catch (error) {
+        console.error("Error loading election details:", error);
+        alert("Failed to load election details.");
+    }
+}
+
+// ✅ Update Election in Database
+async function updateElection(electionId) {
+    const token = getAuthToken();
+    if (!token) return redirectToLogin();
+
+    const title = document.getElementById("election-title").value;
+    const startDate = document.getElementById("election-start").value;
+    const endDate = document.getElementById("election-end").value;
+
+    const updatedElection = { title, startDate, endDate };
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/elections/${electionId}`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
+            body: JSON.stringify(updatedElection)
+        });
+
+        if (!response.ok) throw new Error("Failed to update election");
+
+        alert("Election updated successfully!");
+        window.location.href = "election-dashboard.html";
+
+    } catch (error) {
+        console.error("Error updating election:", error);
+        alert("Error updating election. Please try again.");
+    }
+}
+
+// ✅ Delete Election
+async function deleteElection(electionId) {
+    const token = getAuthToken();
+    if (!token) return redirectToLogin();
+
+    if (!confirm("Are you sure you want to delete this election?")) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/elections/${electionId}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            credentials: "include"
+        });
+
+        if (!response.ok) throw new Error("Failed to delete election");
+
+        alert("Election deleted successfully!");
+        fetchElections();
+
+    } catch (error) {
+        console.error("Error deleting election:", error);
+        alert("Error deleting election. Please try again.");
+    }
+}
+
+async function fetchDashboardStats() {
+    const token = getAuthToken();
+    if (!token) return redirectToLogin();
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/elections/stats`, {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
             credentials: "include",
         });
 
-        if (response.status === 401) return handleUnauthorized();
+        if (!response.ok) throw new Error("Unauthorized access");
 
-        const data = await response.json();
-        console.log("✅ Pending Voters API Response:", data); // Debugging
+        const stats = await response.json();
 
-        // Check if data is valid and contains the expected properties
-        if (data && Array.isArray(data)) {
-            updatePendingVotersTable(data);
-        } else {
-            console.warn("⚠️ Invalid data format received for pending voters");
-            displayErrorInTable("pending-voters-table-body", "Error loading pending voters. Please try again.");
-        }
+        setText("totalElections", stats.totalElections || "0");
+        setText("totalVotes", stats.totalVotes || "0");
+        setText("voterTurnout", `${stats.voterTurnout || "0"}%`);
+
     } catch (error) {
-        console.error("Error fetching pending voters:", error);
-        displayErrorInTable("pending-voters-table-body", "Server error. Try again later.");
+        console.error("Error fetching dashboard stats:", error);
     }
 }
+async function fetchDashboardStats() {
+    const token = localStorage.getItem("token");
+    if (!token) return redirectToLogin();
+
+    try {
+        const response = await fetch("http://localhost:5000/api/v1/elections/stats", {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${token}` },
+            credentials: "include",
+        });
+
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const stats = await response.json();
+
+        setText("totalElections", stats.totalElections || "0");
+        setText("totalVotes", stats.totalVotes || "0");
+        setText("voterTurnout", `${stats.voterTurnout || "0"}%`);
+    } catch (error) {
+        console.error("❌ Error fetching dashboard stats:", error);
+    }
+}
+
+// ✅ Run on Page Load
+document.addEventListener("DOMContentLoaded", function () {
+    checkAuthToken();
+    fetchDashboardStats(); // ✅ Ensure this runs
+    fetchElections();
+});

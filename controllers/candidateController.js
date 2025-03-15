@@ -21,15 +21,12 @@ exports.registerCandidate = async (req, res) => {
         }
 
         // Check if Party & Election exist
-        console.log("Received partyId:", partyId);
-console.log("Received electionId:", electionId);
         // Convert string IDs to ObjectId before querying
 const party = await Party.findById(new mongoose.Types.ObjectId(partyId));
 const election = await Election.findById(new mongoose.Types.ObjectId(electionId));
 
         
-console.log("Fetched Party:", party);
-console.log("Fetched Election:", election);
+
         
         if (!party || !election) {
             return res.status(404).json({ error: "Party or Election not found." });
@@ -49,7 +46,6 @@ exports.getCandidates = async (req, res) => {
     try {
         const { electionId } = req.params;
 
-        console.log(`📌 Fetching candidates for Election ID: ${electionId}`);
 
         if (!mongoose.Types.ObjectId.isValid(electionId)) {
             return res.status(400).json({ error: "Invalid Election ID format." });
@@ -65,7 +61,6 @@ exports.getCandidates = async (req, res) => {
             .populate("party", "name symbol")  
             .populate("election", "title");
 
-        console.log("🔹 Found Candidates:", candidates); // ✅ Log the full list of candidates
 
         if (!candidates || candidates.length === 0) {
             console.warn("⚠️ No candidates found. Returning empty array.");

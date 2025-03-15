@@ -4,25 +4,41 @@ const Vote = require("../models/Vote");
 // ✅ Create Election
 const createElection = async (req, res) => {
     try {
-        const { title, description, startDate, endDate, candidates } = req.body;
+        const { title, description = "", startDate, endDate, candidates = [] } = req.body;  // ✅ Set default values
+
+        if (!title || !startDate || !endDate) {
+            return res.status(400).json({ message: "Title, Start Date, and End Date are required." });
+        }
+
         const newElection = new Election({ title, description, startDate, endDate, candidates });
         await newElection.save();
+
         res.status(201).json({ message: "Election created successfully!", election: newElection });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Error creating election:", error);
+        res.status(500).json({ message: "Internal server error." });
     }
 };
 
-// ✅ Get All Elections
+
 const getElections = async (req, res) => {
     try {
         const elections = await Election.find();
-        res.json(elections);
+
+        // Convert ObjectId to String
+        const formattedElections = elections.map(election => ({
+            ...election.toObject(), // Convert to plain JS object
+            _id: election._id.toString(), // Convert ObjectId to string
+        }));
+
+
+        res.json(formattedElections); // Send fixed data to frontend
     } catch (error) {
         console.error("Error fetching elections:", error);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ error: "Server error" });
     }
 };
+
 
 
 
@@ -32,7 +48,6 @@ const updateElection = async (req, res) => {
         const { title, startDate, endDate } = req.body; // Get updated data from request body
         const electionId = req.params.id; // Get election ID from URL
 
-        console.log("Updating election:", electionId); // Debugging log
 
         const updatedElection = await Election.findByIdAndUpdate(
             electionId,  // Find election by ID
@@ -68,11 +83,13 @@ async function getElectionStats(req, res) {
         const totalVotes = await Vote.countDocuments();
         const voterTurnout = totalElections > 0 ? (totalVotes / totalElections) * 100 : 0;
 
+
         res.json({
             totalElections,
             totalVotes,
             voterTurnout: voterTurnout.toFixed(2),
         });
+
     } catch (error) {
         console.error("Error fetching election stats:", error);
         res.status(500).json({ message: "Error fetching election stats" });
