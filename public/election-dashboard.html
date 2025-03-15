@@ -5,169 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Election Management Dashboard</title>
     <link rel="stylesheet" href="styles.css">
-    <script defer src="script.js"></script>
 </head>
 <body>
+    <h1>Election Management Dashboard</h1>
 
-    <!-- Top Navbar -->
-    <header class="navbar">
-        <div class="email">contact@example.com</div>
-        <nav>
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li class="dropdown">
-                    <a href="manage-elections.html">Elections ▼</a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">Create Election</a></li>
-                        <li><a href="#">Manage Elections</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#">Candidates ▼</a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">Add Candidate</a></li>
-                        <li><a href="#">Manage Candidates</a></li>
-                    </ul>
-                </li>
-                <li><a href="#">Reports</a></li>
-                <li><a href="#">Help Desk</a></li>
-            </ul>
-        </nav>
-        <div class="right-section">
-            <div class="profile-dropdown">
-                <img src="images/profile-icon.png" alt="Profile" class="profile-icon">
-                <div class="profile-dropdown-content">
-                    <a href="election-dashboard.html">Dashboard</a>
-                    <a href="manage-elections.html">Elections</a>
-                    <a href="voter_verification.html">Voters</a>
-                    <button onclick="logout()">Logout</button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Sidebar + Main Content -->
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <ul>
-                <li class="active"><a href="#">Dashboard</a></li>
-                <li><a href="manage-elections.html">Elections</a></li>
-                <li><a href="voter_verification.html">Voter ID Verification</a></li>
-                <li><a href="candidates.html">Candidates</a></li>
-                <li><a href="parties.html">Parties</a></li>
-                <li><a href="approve_voters.html">Approve Voters</a></li>
-                <li><a href="duplicate_voters.html">Duplicate Voters</a></li>
-            </ul>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="dashboard-content">
-            <h1>Election Management Dashboard</h1>
-            <div class="stats">
-                <div class="card">Total Elections: <span id="totalElections">0</span></div>
-                <div class="card">Total Votes: <span id="totalVotes">0</span></div>
-                <div class="card">Voter Turnout: <span id="voterTurnout">0%</span></div>
-            </div>
-
-            <div class="election-actions">
-                <button class="btn" onclick="window.location.href='/create-election.html'">Create Election</button>
-                <button class="btn" onclick="window.location.href='/manage-elections.html'">Manage Elections</button>
-            </div>
-
-            <!-- Election List -->
-            <h2>All Elections</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="elections-table-body"></tbody>
-            </table>
-
-            <!-- ✅ Pending Voter Approvals Table -->
-            <h2>Pending Voter Approvals</h2>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>National ID</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="voter-list"></tbody>
-            </table>
-
-        </main>
+    <!-- Election Statistics -->
+    <div class="stats">
+        <div class="stat-box">Total Elections: <span id="total-elections">0</span></div>
+        <div class="stat-box">Total Votes: <span id="total-votes">0</span></div>
+        <div class="stat-box">Voter Turnout: <span id="voter-turnout">0%</span></div>
     </div>
 
-    <!-- ✅ JavaScript -->
+    <!-- Election Actions -->
+    <button onclick="createElection()">Create Election</button>
+    <button onclick="manageElections()">Manage Elections</button>
+
+    <!-- List of Elections -->
+    <h2>All Elections</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="election-list"></tbody>
+    </table>
+
+    <!-- Pending Voter Approvals -->
+    <h2>Pending Voter Approvals</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>National ID</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="voter-list"></tbody>
+    </table>
+
+    <!-- Live Voting Count -->
+    <h2>🗳️ Live Voting Count</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Candidate</th>
+            <th>Party</th>
+            <th>Votes</th>
+        </tr>
+    </thead>
+    <tbody id="vote-count"> <!-- Ensure this ID exists -->
+        <tr>
+            <td colspan="3">Waiting for live updates...</td>
+        </tr>
+    </tbody>
+</table>
+
+    <!-- Region-Wise Vote Distribution -->
+    <h2>📊 Region-Wise Vote Distribution</h2>
+    <canvas id="regionChart"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="election-dashboard.js"></script>
-    <script>
-        // Fetch Elections Data
-        async function fetchPendingVoters() {
-    try {
-        const response = await fetch("http://localhost:5000/api/v1/voters/pending");
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json(); // Read response as JSON
-
-        if (!Array.isArray(data)) {
-            throw new Error("Invalid data format: Expected an array of voters.");
-        }
-
-        const tableBody = document.getElementById("voter-list");
-        tableBody.innerHTML = "";
-
-        data.forEach(voter => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${voter.name || "N/A"}</td>
-                <td>${voter.email || "N/A"}</td>
-                <td>${voter.nationalId || "N/A"}</td>  <!-- ✅ Corrected Property Name -->
-                <td>
-                    <button onclick="approveVoter('${voter._id}')">Approve</button>
-                    <button onclick="rejectVoter('${voter._id}')">Reject</button>
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-    } catch (error) {
-        console.error("Error fetching voters:", error);
-    }
-}
-
-        // Approve Voter Function
-        async function approveVoter(id) {
-            try {
-                await fetch(`http://localhost:5000/api/v1/voters/approve/${id}`, { method: "PUT" });
-                fetchPendingVoters(); // Refresh voter list
-            } catch (error) {
-                console.error("Error approving voter:", error);
-            }
-        }
-
-        // Reject Voter Function
-        async function rejectVoter(id) {
-            try {
-                await fetch(`http://localhost:5000/api/v1/voters/reject/${id}`, { method: "PUT" });
-                fetchPendingVoters(); // Refresh voter list
-            } catch (error) {
-                console.error("Error rejecting voter:", error);
-            }
-        }
-
-        // Initial Fetch Calls
-        fetchElections();
-        fetchPendingVoters();
-    </script>
 </body>
 </html>

@@ -6,6 +6,7 @@ const passport = require("passport");
 const connectDb = require("./db/connectDb");
 const path = require("path");
 const cookieParser = require("cookie-parser");
+const WebSocket = require("ws"); // ✅ Added WebSocket Support
 
 dotenv.config();
 require("./config/passport");
@@ -20,6 +21,8 @@ const voteRoutes = require("./routes/voteRoutes");
 const voterRoutes = require("./routes/voterRoutes");
 
 const app = express();
+const server = require("http").createServer(app); // ✅ WebSocket requires HTTP server
+const wss = new WebSocket.Server({ server }); // ✅ Create WebSocket server
 
 // ✅ Allow credentials (cookies) in CORS
 app.use(cors({
@@ -46,16 +49,65 @@ app.use("/api/v1/candidates", candidateRoutes);
 app.use("/api/v1/votes", voteRoutes);
 app.use("/api/v1/voters", voterRoutes);
 
+// ✅ WebSocket Connection
+wss.on("connection", (ws) => {
+    console.log("🟢 WebSocket Client Connected");
+
+    ws.on("message", (message) => {
+        console.log("📩 Received message:", message);
+    });
+
+    ws.on("close", () => {
+        console.log("🔴 WebSocket Client Disconnected");
+    });
+});
+
+// ✅ Function to Send Live Vote Count to WebSocket Clients
+const sendLiveVoteCount = async (electionId) => {
+    try {
+        const Vote = require("./models/Vote"); // Load Vote Model
+        const liveVotes = await Vote.aggregate([
+            { $match: { electionId: mongoose.Types.ObjectId(electionId) } },
+            { $group: { _id: "$candidateId", voteCount: { $sum: 1 } } }
+        ]);
+
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(liveVotes));
+            }
+        });
+
+        console.log("📡 Sent live vote update:", liveVotes);
+    } catch (error) {
+        console.error("❌ Error sending live vote count:", error);
+    }
+};
+
+// ✅ Modified `castVote` Function to Send Live Updates
+const castVote = async (req, res) => {
+    try {
+        const { electionId, voterId, candidateId } = req.body;
+        const Vote = require("./models/Vote"); // Load Vote Model
+        const vote = new Vote({ electionId, voterId, candidateId });
+        await vote.save();
+
+        sendLiveVoteCount(electionId); // ✅ Trigger live update
+        res.status(201).json({ message: "Vote recorded successfully", vote });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 const port = process.env.PORT || 5000;
 
 const start = async () => {
     try {
         await connectDb(process.env.MONGO_URI);
-        app.listen(port, () => {
-            console.log(`Server running on port ${port}`);
+        server.listen(port, () => { // ✅ Change from `app.listen` to `server.listen`
+            console.log(`✅ Server running on port ${port}`);
         });
     } catch (error) {
-        console.error("Error starting server:", error);
+        console.error("❌ Error starting server:", error);
     }
 };
 
