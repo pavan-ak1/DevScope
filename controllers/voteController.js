@@ -25,12 +25,19 @@ exports.castVote = async (req, res) => {
         const vote = new Vote({ electionId, voterId, candidateId });
         await vote.save();
 
+        // ✅ Increment Candidate votes
+        await Candidate.findByIdAndUpdate(candidateId, { $inc: { votesReceived: 1 } });
+
+        // ✅ Increment total votes in Election
+        await Election.findByIdAndUpdate(electionId, { $inc: { votesCast: 1 } });
+
         res.status(201).json({ success: true, message: "Vote recorded successfully", vote });
     } catch (error) {
         console.error("Vote casting error:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
 
 
 // Get votes for an election
@@ -65,30 +72,54 @@ exports.getVoterTurnout = async (req, res) => {
     }
 };
 
+
 exports.getLiveVoteCount = async (req, res) => {
     try {
         const { electionId } = req.params;
 
-        // Ensure electionId is provided
         if (!electionId) {
             return res.status(400).json({ message: "Election ID is required" });
         }
 
-        // Aggregate votes per candidate
-        const voteCounts = await Vote.aggregate([
-            { $match: { election: electionId } },  // Filter by election
-            { $group: { _id: "$candidate", count: { $sum: 1 } } },
-            { $lookup: { from: "candidates", localField: "_id", foreignField: "_id", as: "candidateData" } },
-            { $unwind: "$candidateData" },
-            { $project: { candidate: "$candidateData.name", party: "$candidateData.party", count: 1 } }
+        const voteCounts = await Candidate.aggregate([
+            { $match: { election: new mongoose.Types.ObjectId(electionId) } }, // ✅ Get all candidates in the election
+            {
+                $lookup: { 
+                    from: "votes",
+                    localField: "_id",
+                    foreignField: "candidateId",
+                    as: "voteData"
+                }
+            },
+            {
+                $lookup: { 
+                    from: "parties",
+                    localField: "party",
+                    foreignField: "_id",
+                    as: "partyData"
+                }
+            },
+            { $unwind: { path: "$partyData", preserveNullAndEmptyArrays: true } }, // ✅ Preserve missing party info
+            {
+                $project: { 
+                    candidate: "$name",
+                    party: "$partyData.name",
+                    votes: { $ifNull: [{ $size: "$voteData" }, 0] } // ✅ Force 0 votes if no votes exist
+                }
+            }
         ]);
 
+        console.log("📡 Live Vote Count Data:", voteCounts);
         res.json(voteCounts);
     } catch (error) {
         console.error("❌ Error fetching live vote count:", error);
         res.status(500).json({ message: "Server error fetching live vote count" });
     }
 };
+
+
+
+
 
 // ✅ 2️⃣ Get Vote Distribution by Region
 exports.getVoteDistributionByRegion = async (req, res) => {

@@ -237,3 +237,50 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchDashboardStats(); // ✅ Ensure this runs
     fetchElections();
 });
+
+
+document.getElementById("create-election-form").addEventListener("submit", async (event) => {
+    event.preventDefault(); // Prevent page reload
+
+    // Collect form data
+    const title = document.getElementById("election-title").value;
+    const startDate = document.getElementById("election-start").value;
+    const endDate = document.getElementById("election-end").value;
+
+    // Validate input
+    if (!title || !startDate || !endDate) {
+        alert("Please fill in all fields.");
+        return;
+    }
+
+    // Prepare request data
+    const electionData = {
+        title,
+        startDate,
+        endDate
+    };
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/elections`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${getAuthToken()}` // Ensure user is authenticated
+            },
+            body: JSON.stringify(electionData)
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            alert("✅ Election created successfully!");
+            window.location.href = "manage-elections.html"; // Redirect to election list
+        } else {
+            alert(`❌ Error: ${data.message}`);
+        }
+    } catch (error) {
+        console.error("❌ Error creating election:", error);
+        alert("❌ Failed to create election. Check console for details.");
+    }
+});
+
+

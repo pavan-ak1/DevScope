@@ -97,15 +97,6 @@ async function fetchPendingVoters() {
 // ✅ Fetch live voting count
 async function fetchLiveVotingCount(electionId) {
     try {
-        if (!electionId) return console.warn("⚠️ No election ID provided for live vote count!");
-
-        // ✅ Ensure the vote-count element exists before updating it
-        const tableBody = document.getElementById("vote-count");
-        if (!tableBody) {
-            console.error("❌ Error: 'vote-count' element not found! Ensure it exists in HTML.");
-            return;
-        }
-
         const response = await fetch(`${API_BASE_URL}/api/v1/votes/live/${electionId}`, {  
             headers: { "Authorization": `Bearer ${getAuthToken()}` } 
         });
@@ -123,11 +114,9 @@ async function fetchLiveVotingCount(electionId) {
     }
 }
 
-
-// ✅ Ensure vote count table exists before updating
+// ✅ Update Live Vote Count UI
 function updateLiveVotingUI(liveVotes) {
     const tableBody = document.getElementById("vote-count");
-
     if (!tableBody) {
         console.error("❌ Error: 'vote-count' element not found! Ensure it exists in HTML.");
         return;
@@ -138,19 +127,81 @@ function updateLiveVotingUI(liveVotes) {
     liveVotes.forEach(vote => {
         const row = document.createElement("tr");
         row.innerHTML = `
-            <td>${vote.candidateName || "Unknown Candidate"}</td>
-            <td>${vote.party || "Unknown Party"}</td>
-            <td>${vote.voteCount}</td>
+            <td>${vote.candidate}</td>
+            <td>${vote.party}</td>
+            <td>${vote.votes}</td>
         `;
         tableBody.appendChild(row);
     });
 }
 
-// ✅ WebSocket for real-time voting updates
-const socket = new WebSocket("ws://localhost:5000"); // ✅ Connect to WebSocket Server
 
-socket.onmessage = (event) => {
-    const liveVotes = JSON.parse(event.data);
-    console.log("📡 Real-Time Vote Update:", liveVotes);
-    updateLiveVotingUI(liveVotes);
+// ✅ WebSocket for real-time voting updates
+const socket = io("http://localhost:5000"); // Ensure correct backend URL
+
+socket.on("updateLiveVotes", (data) => {
+    console.log("🔥 Live Vote Update Received:", data);
+    updateVoteCountOnUI(data); // Make sure this function updates the UI
+});
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Ensure buttons exist before adding event listeners
+    const createElectionBtn = document.getElementById("create-election-btn");
+    const manageElectionsBtn = document.getElementById("manage-elections-btn");
+
+    if (createElectionBtn) {
+        createElectionBtn.addEventListener("click", () => {
+            window.location.href = "create-election.html"; // ✅ Redirect to create election page
+        });
+    } else {
+        console.error("❌ 'Create Election' button not found in HTML.");
+    }
+
+    if (manageElectionsBtn) {
+        manageElectionsBtn.addEventListener("click", () => {
+            window.location.href = "manage-elections.html"; // ✅ Redirect to manage elections page
+        });
+    } else {
+        console.error("❌ 'Manage Elections' button not found in HTML.");
+    }
+});
+
+
+function editElection(electionId) {
+    window.location.href = `edit-election.html?id=${electionId}`;
 }
+
+
+
+async function deleteElection(electionId) {
+    if (!confirm("Are you sure you want to delete this election?")) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/elections/${electionId}`, {
+            method: "DELETE"
+        });
+
+        if (!response.ok) throw new Error("Failed to delete election");
+
+        alert("Election deleted successfully!");
+        fetchElections(); // Refresh the list
+    } catch (error) {
+        console.error("Error deleting election:", error);
+    }
+}
+
+const sidebar = document.getElementById("sidebar");
+const toggleBtn = document.getElementById("toggle-btn");
+const content = document.getElementById("content"); // Main content
+
+toggleBtn.addEventListener("click", function () {
+    if (sidebar.style.left === "-250px") {
+        sidebar.style.left = "0";
+        document.body.classList.add("sidebar-open");
+    } else {
+        sidebar.style.left = "-250px";
+        document.body.classList.remove("sidebar-open");
+    }
+});

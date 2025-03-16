@@ -12,4 +12,6 @@ router.get("/turnout/:electionId", authMiddleware, getVoterTurnout);  // ✅ Pro
 router.get("/live/:electionId", authMiddleware, getLiveVoteCount);  // ✅ Live Vote Count
 router.get("/distribution/:electionId", authMiddleware, getVoteDistributionByRegion);  // ✅ Vote Distribution
 router.get("/results/:electionId", authMiddleware, getElectionResults);  // ✅ Election Results
+router.get('/live-vote-count', authMiddleware,getLiveVoteCount)
+
 module.exports = router;

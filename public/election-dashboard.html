@@ -5,9 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Election Management Dashboard</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+       /* Sidebar Styling */
+/* Sidebar Styling */
+#sidebar {
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    left: -250px; /* Initially hidden */
+    top: 0;
+    background: #222;
+    color: white;
+    padding: 20px;
+    transition: left 0.3s ease-in-out;
+    z-index: 1000; /* Ensures sidebar stays above other elements */
+}
+
+/* Toggle Button */
+#toggle-btn {
+    position: fixed;
+    left: 10px;
+    top: 10px;
+    background: #444;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 5px;
+    z-index: 1100; /* Ensures button stays visible */
+}
+
+#toggle-btn:hover {
+    background: #555;
+}
+
+/* Fix Content Overlap */
+#content {
+    transition: margin-left 0.3s ease-in-out;
+    padding: 20px;
+}
+
+.sidebar-open #content {
+    margin-left: 250px; /* Push content when sidebar is open */
+}
+
+    </style>
 </head>
 <body>
     <h1>Election Management Dashboard</h1>
+    <button id="toggle-btn">☰ Menu</button>
+    <div id="sidebar">
+        <h2>Election Dashboard</h2>
+        <ul>
+            <li><a href="dashboard.html">🏠 Home</a></li>
+            <li><a href="manage-elections.html">🗳️ Elections</a></li>
+            <li><a href="candidates.html">👤 Candidates</a></li>
+            <li><a href="parties.html">🏛️ Political Parties</a></li>
+            <li><a href="voter_verification.html">✅ Voter Verification</a></li>
+        </ul>
+    </div>
 
     <!-- Election Statistics -->
     <div class="stats">
@@ -17,8 +74,8 @@
     </div>
 
     <!-- Election Actions -->
-    <button onclick="createElection()">Create Election</button>
-    <button onclick="manageElections()">Manage Elections</button>
+    <button id="create-election-btn">Create Election</button>
+    <button id="manage-elections-btn">Manage Elections</button>
 
     <!-- List of Elections -->
     <h2>All Elections</h2>
@@ -69,7 +126,9 @@
     <h2>📊 Region-Wise Vote Distribution</h2>
     <canvas id="regionChart"></canvas>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="election-dashboard.js"></script>
+  <!-- Add this inside your HTML file -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="election-dashboard.js"></script> <!-- Your frontend script -->
+
 </body>
 </html>
