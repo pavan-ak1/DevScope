@@ -24,11 +24,11 @@ export async function answerQuestion(collectionName:string,question:string, topK
   return response.content;
 }
 
-//test
-const answer = await answerQuestion(
-  "portfolio_repo",
-  "Where is authentication implemented?"
-);
+// //test
+// const answer = await answerQuestion(
+//   "portfolio_repo",
+//   "Where is authentication implemented?"
+// );
 
-console.log("\nANSWER:\n");
-console.log(answer);
+// console.log("\nANSWER:\n");
+// console.log(answer);

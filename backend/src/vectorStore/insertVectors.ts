@@ -40,12 +40,12 @@ export async function insertVectors(
   log(`Inserted ${points.length} vectors`);
 }
 
-const repoUrl = "https://github.com/pavan-ak1/Portfolio"
+// const repoUrl = "https://github.com/pavan-ak1/Portfolio"
 
-const files = await fetchRepoFiles(repoUrl);
+// const files = await fetchRepoFiles(repoUrl);
 
-const chunks = chunkFileByFile(files, "Portfolio");
+// const chunks = chunkFileByFile(files, "Portfolio");
 
-const embedded = await embedChunks(chunks);
+// const embedded = await embedChunks(chunks);
 
-await insertVectors("portfolio_repo", embedded);
+// await insertVectors("portfolio_repo", embedded);

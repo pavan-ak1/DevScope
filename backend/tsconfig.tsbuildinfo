@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/github/clonerepo.ts"],"version":"5.9.3"}
+{"root":["./src/index.ts","./src/chunking/filechunker.ts","./src/embeddings/geminiembedder.ts","./src/github/fetchrepofiles.ts","./src/llm/answerquestion.ts","./src/llm/cerebrasllm.ts","./src/llm/ragprompt.ts","./src/queue/queues.ts","./src/queue/redis.ts","./src/retrieval/searchrepo.ts","./src/vectorstore/insertvectors.ts","./src/vectorstore/qdrantstore.ts","./src/workers/ingestworker.ts"],"version":"5.9.3"}
