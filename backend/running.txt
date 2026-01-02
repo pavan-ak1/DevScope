@@ -7,3 +7,6 @@ run worker file
 
 then nothing else everthing is good to go server is up and running
 
+
+
+npx tsx src/workers/ingestWorker.ts

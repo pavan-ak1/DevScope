@@ -8,6 +8,11 @@ export const embeddings = new GoogleGenerativeAIEmbeddings({
 });
 
 export async function embedChunks(chunks: FileChunk[]) {
+
+  if(chunks.length === 0){
+    return [];
+  }
+
   const texts = chunks.map((chunk) => chunk.pageContent);
 
   const vectors = await embeddings.embedDocuments(texts);

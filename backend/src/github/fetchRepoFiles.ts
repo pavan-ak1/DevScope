@@ -1,7 +1,4 @@
 import axios from "axios";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 /**
  * Represents a fetched source file
@@ -12,17 +9,21 @@ export interface RepoFile {
 }
 
 /**
- * Safely parse GitHub repo URL
+ * Safely parse GitHub repo URL.
  * Supports:
  *  - https://github.com/owner/repo
  *  - https://github.com/owner/repo.git
  */
 function parseRepoUrl(repoUrl: string) {
-  const cleanUrl = repoUrl.replace(".git", "").replace(/\/$/, "");
-  const parts = cleanUrl.split("/");
+  if (!repoUrl) {
+    throw new Error("repoUrl is required");
+  }
 
-  const owner = parts[3];
-  const repo = parts[4];
+  const cleanUrl = repoUrl.replace(/\.git$/, "").replace(/\/$/, "");
+  const parts = cleanUrl.split("/").filter(Boolean);
+
+  const repo = parts[parts.length - 1];
+  const owner = parts[parts.length - 2];
 
   if (!owner || !repo) {
     throw new Error("Invalid GitHub repository URL");
@@ -41,7 +42,6 @@ export async function fetchRepoFiles(repoUrl: string): Promise<RepoFile[]> {
 
   const { owner, repo } = parseRepoUrl(repoUrl);
 
-  // GitHub API client
   const github = axios.create({
     baseURL: "https://api.github.com",
     headers: {
@@ -51,13 +51,13 @@ export async function fetchRepoFiles(repoUrl: string): Promise<RepoFile[]> {
     },
   });
 
-  // 1️⃣ Get repository metadata → default branch
+  // 1️⃣ Get default branch
   const repoRes = await github.get(`/repos/${owner}/${repo}`);
   const defaultBranch = repoRes.data.default_branch;
 
-  console.log("Default branch:", defaultBranch);
+  console.log("[fetchRepoFiles] Default branch:", defaultBranch);
 
-  // 2️⃣ Get full file tree (recursive)
+  // 2️⃣ Fetch full tree
   const treeRes = await github.get(
     `/repos/${owner}/${repo}/git/trees/${defaultBranch}?recursive=1`
   );
@@ -70,18 +70,9 @@ export async function fetchRepoFiles(repoUrl: string): Promise<RepoFile[]> {
   }>;
 
   console.log(
-  "Total files in repo:",
-  tree.filter(f => f.type === "blob").length
-);
-
-console.log(
-  "Sample paths:",
-  tree
-    .filter(f => f.type === "blob")
-    .slice(0, 10)
-    .map(f => f.path)
-);
-
+    "[fetchRepoFiles] Total blobs:",
+    tree.filter((f) => f.type === "blob").length
+  );
 
   // 3️⃣ Filter allowed files
   const allowedFiles = tree.filter((file) => {
@@ -99,24 +90,26 @@ console.log(
       return false;
     }
 
-    // Inclusions
-    // Inclusions (code & config files)
-return (
-  file.path === "README.md" ||
-  file.path.endsWith(".ts") ||
-  file.path.endsWith(".js") ||
-  file.path.endsWith(".tsx") ||
-  file.path.endsWith(".jsx") ||
-  file.path.endsWith(".json")
-);
-
+    // Inclusions (code + docs)
+    return (
+      file.path === "README.md" ||
+      file.path.endsWith(".ts") ||
+      file.path.endsWith(".js") ||
+      file.path.endsWith(".tsx") ||
+      file.path.endsWith(".jsx") ||
+      file.path.endsWith(".json")
+    );
   });
 
-  // 4️⃣ Download file contents
+  // 4️⃣ Download file contents (sequential by design to avoid API abuse)
   const files: RepoFile[] = [];
 
   for (const file of allowedFiles) {
     const blobRes = await github.get(file.url);
+
+    if (!blobRes.data?.content) {
+      continue; // safety guard
+    }
 
     const content = Buffer.from(
       blobRes.data.content,
@@ -131,18 +124,3 @@ return (
 
   return files;
 }
-
-// /* ------------------ TEST ------------------ */
-
-// const files = await fetchRepoFiles(
-//   "https://github.com/pavan-ak1/Portfolio"
-// );
-
-// console.log("Files fetched:", files.length);
-// if (files.length === 0) {
-//   console.log("No files matched ingestion rules");
-// } else {
-//   console.log(files[0].path);
-//   console.log(files[0].content);
-// }
-
