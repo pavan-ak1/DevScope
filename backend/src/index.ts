@@ -6,6 +6,10 @@ import { metricsQueue } from "./queue/metricQueue.js";
 import cors from "cors";
 import { pgPool } from "./vectorStore/pgClient.js";
 
+// Run BullMQ workers in the same process for free-tier compatibility
+import "./workers/ingestWorker.js";
+import "./workers/metricsWorker.js";
+
 const app = express();
 
 app.use(cors({
