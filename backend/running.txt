@@ -1,0 +1,12 @@
+run these commands in terminal
+docker run -d -p 6379:6379 redis
+
+docker run -d -p 6333:6333 -p 6334:6334 qdrant/qdrant
+
+run worker file 
+
+then nothing else everthing is good to go server is up and running
+
+
+
+npx tsx src/workers/ingestWorker.ts
