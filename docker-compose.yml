@@ -20,32 +20,6 @@ services:
     ports:
       - "6379:6379"
 
-  ollama:
-    image: ollama/ollama
-    container_name: repo_ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-    entrypoint: >
-      sh -c "
-      ollama serve &
-      sleep 10 &&
-      ollama pull nomic-embed-text &&
-      ollama pull llama3.2 &&
-      wait
-      "
-
   backend-api:
     build: 
       context: ./backend
@@ -55,13 +29,11 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
-      - OLLAMA_BASE_URL=http://ollama:11434
     ports:
       - "5000:5000"
     depends_on:
       - postgres
       - redis
-      - ollama
 
   backend-worker:
     build: 
@@ -72,12 +44,10 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
-      - OLLAMA_BASE_URL=http://ollama:11434
     command: ["node", "dist/workers/ingestWorker.js"]
     depends_on:
       - postgres
       - redis
-      - ollama
   
   backend-metrics-worker:
     build: 
@@ -88,13 +58,10 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - REDIS_HOST=redis
-      - OLLAMA_BASE_URL=http://ollama:11434
     command: ["node", "dist/workers/metricsWorker.js"]
     depends_on:
       - postgres
       - redis
-      - ollama
 
 volumes:
   pgdata:
-  ollama:

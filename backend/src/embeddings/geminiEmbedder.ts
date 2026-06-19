@@ -1,15 +1,9 @@
-import { OllamaEmbeddings } from "@langchain/ollama";
 import axios from "axios";
 import { env } from "../env.js";
 
-const ollamaEmbeddings = new OllamaEmbeddings({
-  model: "nomic-embed-text",
-  baseUrl: env.OLLAMA_BASE_URL,
-});
-
 async function embedQueryWithGeminiAPI(text: string): Promise<number[]> {
   if (!env.GOOGLE_API_KEY) {
-    throw new Error("GOOGLE_API_KEY is not configured for Gemini fallback.");
+    throw new Error("GOOGLE_API_KEY is not configured for Gemini embeddings.");
   }
   const cleanText = text.replace(/\n/g, " ");
   const res = await axios.post(
@@ -29,7 +23,7 @@ async function embedQueryWithGeminiAPI(text: string): Promise<number[]> {
 
 async function embedChunksWithGeminiAPI(texts: string[]): Promise<number[][]> {
   if (!env.GOOGLE_API_KEY) {
-    throw new Error("GOOGLE_API_KEY is not configured for Gemini fallback.");
+    throw new Error("GOOGLE_API_KEY is not configured for Gemini embeddings.");
   }
 
   const batchSize = 100;
@@ -62,28 +56,18 @@ async function embedChunksWithGeminiAPI(texts: string[]): Promise<number[][]> {
 
 export async function embedChunks(texts: string[]): Promise<number[][]> {
   try {
-    return await ollamaEmbeddings.embedDocuments(texts);
-  } catch (error: any) {
-    console.warn("Ollama embeddings failed, trying Gemini API fallback...", error.message || error);
-    try {
-      return await embedChunksWithGeminiAPI(texts);
-    } catch (geminiError: any) {
-      console.error("Gemini API embeddings fallback failed:", geminiError.message || geminiError);
-      throw geminiError;
-    }
+    return await embedChunksWithGeminiAPI(texts);
+  } catch (geminiError: any) {
+    console.error("Gemini API embeddings failed:", geminiError.message || geminiError);
+    throw geminiError;
   }
 }
 
 export async function embedQuery(text: string): Promise<number[]> {
   try {
-    return await ollamaEmbeddings.embedQuery(text);
-  } catch (error: any) {
-    console.warn("Ollama embeddings failed, trying Gemini API fallback...", error.message || error);
-    try {
-      return await embedQueryWithGeminiAPI(text);
-    } catch (geminiError: any) {
-      console.error("Gemini API embeddings fallback failed:", geminiError.message || geminiError);
-      throw geminiError;
-    }
+    return await embedQueryWithGeminiAPI(text);
+  } catch (geminiError: any) {
+    console.error("Gemini API embeddings failed:", geminiError.message || geminiError);
+    throw geminiError;
   }
 }

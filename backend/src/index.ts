@@ -9,7 +9,15 @@ import { pgPool } from "./vectorStore/pgClient.js";
 const app = express();
 
 app.use(cors({
-  origin: env.FRONTEND_URL
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+    if (isLocalhost || origin === env.FRONTEND_URL) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  }
 }));
 app.use(express.json());
 
