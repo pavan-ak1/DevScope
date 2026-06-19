@@ -1,12 +1,11 @@
-services:
-  # 1. Database (Postgres with pgvector enabled by default on Render)
-  - type: database
-    name: devscope-db
+databases:
+  - name: devscope-db
     databaseName: repo_explainer
-    user: postgres
+    userName: postgres
     plan: free
 
-  # 2. Redis (for BullMQ queue processing)
+services:
+  # 1. Redis (for BullMQ queue processing)
   - type: redis
     name: devscope-redis
     plan: free
