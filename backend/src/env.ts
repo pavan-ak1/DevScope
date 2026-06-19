@@ -10,16 +10,16 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 export const env = {
   PORT: process.env.PORT || "5000",
 
+  DATABASE_URL: process.env.DATABASE_URL || "",
   POSTGRES_HOST: process.env.POSTGRES_HOST || "localhost",
   POSTGRES_PORT: process.env.POSTGRES_PORT || "5432",
   POSTGRES_USER: process.env.POSTGRES_USER || "postgres",
   POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD || "postgres",
   POSTGRES_DB: process.env.POSTGRES_DB || "repo_explainer",
 
+  REDIS_URL: process.env.REDIS_URL || "",
   REDIS_HOST: process.env.REDIS_HOST || "localhost",
   REDIS_PORT: process.env.REDIS_PORT || "6379",
-
-  OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
 
   GOOGLE_API_KEY: process.env.GOOGLE_API_KEY || "",
   CEREBRAS_API_KEY: process.env.CEREBRAS_API_KEY || "",
