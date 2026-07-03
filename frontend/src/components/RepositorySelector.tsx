@@ -140,10 +140,10 @@ export default function RepositorySelector({ onSelectRepository, onShowIngestFor
                     {repo.totalQueries && repo.totalQueries > 0 ? (
                       <div className="repo-metrics" style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', marginTop: '0.35rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
                         <span style={{ background: 'var(--bg-tertiary)', padding: '0.125rem 0.375rem', borderRadius: '4px' }}>
-                          🎯 Prec: {(repo.avgPrecision * 100).toFixed(0)}%
+                          🎯 Prec: {((repo.avgPrecision ?? 0) * 100).toFixed(0)}%
                         </span>
                         <span style={{ background: 'var(--bg-tertiary)', padding: '0.125rem 0.375rem', borderRadius: '4px' }}>
-                          📊 Sim: {repo.avgSimilarity.toFixed(2)}
+                          📊 Sim: {(repo.avgSimilarity ?? 0).toFixed(2)}
                         </span>
                         <span style={{ background: 'var(--bg-tertiary)', padding: '0.125rem 0.375rem', borderRadius: '4px' }}>
                           💬 Qs: {repo.totalQueries}
