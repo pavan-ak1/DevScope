@@ -25,5 +25,6 @@ export const env = {
   CEREBRAS_API_KEY: process.env.CEREBRAS_API_KEY || "",
   GROQ_API_KEY: process.env.GROQ_API_KEY || "",
   GITHUB_TOKEN: process.env.GITHUB_TOKEN || "",
-  FRONTEND_URL: process.env.FRONTEND_LINK || "http://localhost:5173"
+  FRONTEND_URL: process.env.FRONTEND_LINK || "http://localhost:5173",
+  MISTRAL_API_KEY: process.env.MISTRAL_API_KEY || ""
 };

@@ -99,6 +99,18 @@ export async function fetchRepoFiles(
   ];
   const blobsToFetch = tree.filter((item: any) => {
     if (item.type !== "blob") return false;
+    
+    // Ignore lockfiles to prevent unnecessary ingestion
+    const filename = item.path.split("/").pop() || "";
+    if (
+      filename === "package-lock.json" ||
+      filename === "yarn.lock" ||
+      filename === "pnpm-lock.yaml" ||
+      filename === "bun.lockb"
+    ) {
+      return false;
+    }
+
     const ext = (item.path.split(".").pop() || "").toLowerCase();
     return allowedExtensions.includes(ext);
   });

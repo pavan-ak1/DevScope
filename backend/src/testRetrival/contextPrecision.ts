@@ -1,5 +1,5 @@
 import cosineSimilarity from "cosine-similarity";
-import { embedQuery } from "../embeddings/geminiEmbedder.js";
+import { embedQuery } from "../embeddings/mistralEmbedder.js";
 
 export async function contextPrecision(context: string[], groundTruth: string) {
 

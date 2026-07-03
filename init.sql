@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS repo_embeddings (
     file_path TEXT,
     language TEXT,
     content TEXT,
-    embedding VECTOR(768),
+    embedding VECTOR(1024),
     created_at TIMESTAMP DEFAULT NOW()
 );
 

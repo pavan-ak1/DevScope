@@ -35,33 +35,5 @@ services:
       - postgres
       - redis
 
-  backend-worker:
-    build: 
-      context: ./backend
-    container_name: repo_backend_worker
-    env_file:
-      - ./backend/.env
-    environment:
-      - POSTGRES_HOST=postgres
-      - REDIS_HOST=redis
-    command: ["node", "dist/workers/ingestWorker.js"]
-    depends_on:
-      - postgres
-      - redis
-  
-  backend-metrics-worker:
-    build: 
-      context: ./backend
-    container_name: repo_backend_metrics_worker
-    env_file:
-      - ./backend/.env
-    environment:
-      - POSTGRES_HOST=postgres
-      - REDIS_HOST=redis
-    command: ["node", "dist/workers/metricsWorker.js"]
-    depends_on:
-      - postgres
-      - redis
-
 volumes:
   pgdata:

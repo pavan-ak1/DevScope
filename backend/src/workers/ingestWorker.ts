@@ -3,7 +3,7 @@ import { redis } from "../queue/redis.js";
 import { parseRepoName } from "../utils/parseRepoName.js";
 import { fetchRepoFiles } from "../github/fetchRepoFiles.js";
 import { chunkFileByFile } from "../chunking/fileChunker.js";
-import { embedChunks } from "../embeddings/geminiEmbedder.js";
+import { embedChunks } from "../embeddings/mistralEmbedder.js";
 import { insertVectors } from "../vectorStore/insertVectors.js";
 
 new Worker(

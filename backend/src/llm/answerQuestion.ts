@@ -1,4 +1,4 @@
-import { embedQuery } from "../embeddings/geminiEmbedder.js";
+import { embedQuery } from "../embeddings/mistralEmbedder.js";
 import { searchRepo } from "../vectorStore/searchRepo.js";
 import { buildRagPrompt } from "./ragPrompt.js";
 import { callGroq } from "./groqLLM.js";
