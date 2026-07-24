@@ -254,7 +254,7 @@ export default function FormattedResponse({ content }: FormattedResponseProps) {
           output.push('<ol>');
           listState = 'ol';
         }
-        output.push(`<li>${applyInlineFormatting(olMatch[2])}</li>`);
+        output.push(`<li value="${olMatch[1]}">${applyInlineFormatting(olMatch[2])}</li>`);
         continue;
       }
 
