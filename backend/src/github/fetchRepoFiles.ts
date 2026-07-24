@@ -93,20 +93,44 @@ export async function fetchRepoFiles(
     "proto",
     "sh", "bash", "zsh",
     "sql",
-    "html", "htm", "css", "scss", "sass",
-    "md", "mdx", "rst", "txt",
-    "json", "yaml", "yml", "toml", "xml", "ini", "conf", "config", "dockerfile"
+    "dockerfile"
   ];
   const blobsToFetch = tree.filter((item: any) => {
     if (item.type !== "blob") return false;
-    
+    const pathParts = item.path.split("/");
+    const ignoredDirectories = [
+      "node_modules",
+      "dist",
+      "build",
+      "public",
+      "static",
+      "vendor",
+      "bower_components",
+      "assets",
+      "coverage",
+      "temp",
+      "tmp"
+    ];
+
+    const hasIgnoredDir = pathParts.some((part: string) => {
+      const lowerPart = part.toLowerCase();
+      return ignoredDirectories.includes(lowerPart) || lowerPart.startsWith(".");
+    });
+
+    if (hasIgnoredDir) {
+      return false;
+    }
+
     // Ignore lockfiles to prevent unnecessary ingestion
     const filename = item.path.split("/").pop() || "";
     if (
       filename === "package-lock.json" ||
       filename === "yarn.lock" ||
       filename === "pnpm-lock.yaml" ||
-      filename === "bun.lockb"
+      filename === "bun.lockb" ||
+      filename.endsWith(".min.js") ||
+      filename.endsWith(".min.css") ||
+      filename.includes(".bundle.")
     ) {
       return false;
     }

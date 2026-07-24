@@ -1,5 +1,5 @@
 import { embedQuery } from "../embeddings/mistralEmbedder.js";
-import { searchRepo } from "../vectorStore/searchRepo.js";
+import { hybridSearch } from "../retrieval/hybridSearch.js";
 import { buildRagPrompt } from "./ragPrompt.js";
 import { callGroq } from "./groqLLM.js";
 import { env } from "../env.js";
@@ -11,7 +11,7 @@ export async function answerQuestion(
   try {
     const queryEmbedding = await embedQuery(question);
 
-    const results = await searchRepo(repoName, queryEmbedding, 8);
+    const results = await hybridSearch(repoName, question, queryEmbedding, 8);
 
     const prompt = buildRagPrompt(question, results);
 

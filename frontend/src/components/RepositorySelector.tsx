@@ -1,197 +1,154 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { apiService, type Repository } from '../api/services';
-import { MessageCircle, Database, Trash2, AlertTriangle } from 'lucide-react';
+import { Database, Trash2, AlertTriangle, Plus, ChevronRight } from 'lucide-react';
 
 interface RepositorySelectorProps {
+  repositories: Repository[];
+  currentRepo: string;
   onSelectRepository: (repoName: string) => void;
   onShowIngestForm: () => void;
+  onRefresh: () => Promise<void>;
 }
 
-export default function RepositorySelector({ onSelectRepository, onShowIngestForm }: RepositorySelectorProps) {
-  const [repositories, setRepositories] = useState<Repository[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    loadRepositories();
-  }, []);
-
-  const loadRepositories = async () => {
-    try {
-      const repos = await apiService.getRepositories();
-      setRepositories(repos);
-    } catch (err) {
-      setError('Failed to load repositories');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+export default function RepositorySelector({
+  repositories,
+  currentRepo,
+  onSelectRepository,
+  onShowIngestForm,
+  onRefresh
+}: RepositorySelectorProps) {
   const [repoToDelete, setRepoToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const handleDeleteClick = (e: React.MouseEvent, repoName: string) => {
     e.stopPropagation();
     setRepoToDelete(repoName);
+    setDeleteError('');
   };
 
   const handleConfirmDelete = async () => {
     if (!repoToDelete) return;
     const name = repoToDelete;
-    setRepoToDelete(null);
-
+    
     try {
-      setLoading(true);
-      setError('');
+      setDeleting(true);
+      setDeleteError('');
       await apiService.deleteRepository(name);
-      await loadRepositories();
+      setRepoToDelete(null);
+      await onRefresh();
     } catch (err) {
       console.error(err);
-      setError('Failed to delete repository');
-      setLoading(false);
+      setDeleteError('Failed to delete repository');
+    } finally {
+      setDeleting(false);
     }
   };
 
   const handleCancelDelete = () => {
+    if (deleting) return;
     setRepoToDelete(null);
   };
 
-  if (loading) {
-    return (
-      <div className="glass-card">
-        <div className="loader-view">
-          <div className="icon-spin">⏳</div>
-          <h2>Loading repositories...</h2>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="glass-card">
-        <div style={{ textAlign: 'center' }}>
-          <h2>❌ Error</h2>
-          <p>{error}</p>
-          <button onClick={loadRepositories} className="primary-btn">
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="glass-card" style={{ position: 'relative' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Delete Confirmation Modal Overlay */}
       {repoToDelete && (
         <div className="delete-overlay" onClick={handleCancelDelete}>
           <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
             <div className="delete-modal-icon">
-              <AlertTriangle size={24} />
+              <AlertTriangle size={20} />
             </div>
             <h3>Delete Repository?</h3>
             <p>
               Are you sure you want to permanently delete repository <strong>{repoToDelete}</strong>?
-              This will delete all stored vector embeddings and metrics.
+              This will remove all vector embeddings and metrics.
             </p>
+            {deleteError && (
+              <p style={{ color: 'var(--error)', fontSize: '0.8rem', marginBottom: '0.75rem', fontWeight: 600 }}>
+                {deleteError}
+              </p>
+            )}
             <div className="delete-modal-actions">
-              <button onClick={handleCancelDelete} className="delete-cancel-btn">
+              <button 
+                onClick={handleCancelDelete} 
+                className="delete-cancel-btn"
+                disabled={deleting}
+              >
                 Cancel
               </button>
-              <button onClick={handleConfirmDelete} className="delete-confirm-btn">
-                Delete
+              <button 
+                onClick={handleConfirmDelete} 
+                className="delete-confirm-btn"
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
         </div>
       )}
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <Database size={48} color="var(--primary-color)" style={{ marginBottom: '1rem' }} />
-        <h2>Select Repository</h2>
-        <p className="subtitle">Choose an existing repository to chat with, or add a new one.</p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
+        <button 
+          onClick={onShowIngestForm} 
+          className="primary-btn"
+          style={{ width: '100%', padding: '0.55rem 0.85rem', fontSize: '0.82rem', borderRadius: 'var(--radius-sm)' }}
+        >
+          <Plus size={14} />
+          Connect Repository
+        </button>
       </div>
 
-      {repositories.length === 0 ? (
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-            No repositories found. Start by ingesting your first repository.
-          </p>
-          <button onClick={onShowIngestForm} className="primary-btn">
-            <Database size={20} style={{ marginRight: '0.5rem' }} />
-            Add Repository
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="repo-list" style={{ marginBottom: '1.5rem' }}>
-            {repositories.map((repo) => (
-              <div
-                key={repo.name}
-                className="repo-item"
-                onClick={() => onSelectRepository(repo.name)}
-                style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: 0 }}>
-                  <MessageCircle size={20} color="var(--primary-color)" style={{ flexShrink: 0 }} />
-                  <div className="repo-info" style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    <div className="repo-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{repo.name}</div>
+      <div style={{ flex: 1, overflowY: 'auto', marginTop: '0.25rem' }}>
+        {repositories.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '1.5rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+            <Database size={20} style={{ marginBottom: '0.5rem', opacity: 0.4 }} />
+            <p>No ingested repos yet.</p>
+          </div>
+        ) : (
+          <div className="repo-list">
+            {repositories.map((repo) => {
+              const isActive = currentRepo === repo.name;
+              return (
+                <div
+                  key={repo.name}
+                  className={`repo-item ${isActive ? 'active' : ''}`}
+                  onClick={() => onSelectRepository(repo.name)}
+                >
+                  <div className="repo-info">
+                    <div className="repo-name" title={repo.name}>{repo.name}</div>
                     <div className="repo-date">
-                      Ingested {new Date(repo.ingestedAt).toLocaleDateString()}
+                      {new Date(repo.ingestedAt).toLocaleDateString()}
                     </div>
                     {repo.totalQueries && repo.totalQueries > 0 ? (
-                      <div className="repo-metrics" style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', marginTop: '0.35rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
-                        <span style={{ background: 'var(--bg-tertiary)', padding: '0.125rem 0.375rem', borderRadius: '4px' }}>
-                          🎯 Prec: {((repo.avgPrecision ?? 0) * 100).toFixed(0)}%
+                      <div className="repo-badge-grid">
+                        <span className="repo-badge" title="RAG Precision Score">
+                          🎯 {((repo.avgPrecision ?? 0) * 100).toFixed(0)}%
                         </span>
-                        <span style={{ background: 'var(--bg-tertiary)', padding: '0.125rem 0.375rem', borderRadius: '4px' }}>
-                          📊 Sim: {(repo.avgSimilarity ?? 0).toFixed(2)}
-                        </span>
-                        <span style={{ background: 'var(--bg-tertiary)', padding: '0.125rem 0.375rem', borderRadius: '4px' }}>
-                          💬 Qs: {repo.totalQueries}
+                        <span className="repo-badge" title="Query Cosine Similarity">
+                          📊 {(repo.avgSimilarity ?? 0).toFixed(2)}
                         </span>
                       </div>
                     ) : null}
                   </div>
-                </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                  <button
-                    onClick={(e) => handleDeleteClick(e, repo.name)}
-                    className="delete-repo-btn"
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-tertiary)',
-                      cursor: 'pointer',
-                      padding: '0.25rem',
-                      borderRadius: '4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.2s ease',
-                    }}
-                    onMouseOver={(e) => { e.currentTarget.style.color = 'var(--error-color)'; e.currentTarget.style.backgroundColor = '#fee2e2'; }}
-                    onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.backgroundColor = 'transparent'; }}
-                    title="Delete Repository"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                  <div className="repo-arrow">→</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem' }}>
+                    <button
+                      onClick={(e) => handleDeleteClick(e, repo.name)}
+                      className="delete-repo-btn"
+                      title="Delete Repository"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                    <ChevronRight size={13} style={{ color: isActive ? 'var(--primary)' : 'var(--text-muted)' }} />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-
-          <button 
-            onClick={onShowIngestForm} 
-            className="secondary-btn"
-            style={{ width: '100%' }}
-          >
-            <Database size={20} style={{ marginRight: '0.5rem' }} />
-            Add New Repository
-          </button>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }
-
