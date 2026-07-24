@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2, CheckCircle2, XCircle, Clock, Check } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Check } from 'lucide-react';
 import { apiService } from '../api/services';
 
 interface JobProgressProps {

@@ -86,9 +86,6 @@ function App() {
   const avgPrecision = reposWithQueries.length > 0 
     ? reposWithQueries.reduce((sum, r) => sum + (r.avgPrecision || 0), 0) / reposWithQueries.length 
     : 0
-  const avgSimilarity = reposWithQueries.length > 0 
-    ? reposWithQueries.reduce((sum, r) => sum + (r.avgSimilarity || 0), 0) / reposWithQueries.length 
-    : 0
 
   return (
     <div className="app-layout">
