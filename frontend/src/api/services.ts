@@ -109,5 +109,13 @@ export const apiService = {
 
     return response.json();
   },
+
+  async checkHealth(): Promise<{ status: string }> {
+    const response = await fetch(`${API_BASE_URL}/health`);
+    if (!response.ok) {
+      throw new Error('Backend health check failed');
+    }
+    return response.json();
+  },
 };
 

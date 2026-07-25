@@ -54,7 +54,6 @@ async function embedChunksWithMistralAPI(texts: string[]): Promise<number[][]> {
 
   for (let i = 0; i < texts.length; i += batchSize) {
     if (i > 0) {
-      // Small delay between batches to respect rate limits
       await delay(500);
     }
 
@@ -78,7 +77,6 @@ async function embedChunksWithMistralAPI(texts: string[]): Promise<number[][]> {
 
     if (res.data?.data) {
       const data = res.data.data;
-      // Sort by index to ensure correct ordering of embeddings
       data.sort((a: any, b: any) => a.index - b.index);
       results.push(...data.map((e: any) => e.embedding));
     } else {

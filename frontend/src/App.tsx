@@ -4,7 +4,7 @@ import { IngestForm } from './components/IngestForm'
 import { JobProgress } from './components/JobProgress'
 import ChatInterface from './components/ChatInterface'
 import RepositorySelector from './components/RepositorySelector'
-import { Database, BookOpen, Layers, BarChart3, Activity, Sparkles, Menu, X, Plus, ChevronRight, HardDrive } from 'lucide-react'
+import { Database, BookOpen, Layers, BarChart3, Activity, Sparkles, Menu, X, Plus, ChevronRight, HardDrive, RefreshCw } from 'lucide-react'
 
 type AppState = 'select' | 'ingest' | 'ingesting' | 'chat'
 
@@ -13,6 +13,7 @@ function App() {
   const [currentRepo, setCurrentRepo] = useState('')
   const [jobId, setJobId] = useState('')
   const [error, setError] = useState('')
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'active' | 'waking' | 'offline'>('checking')
   
   const [repositories, setRepositories] = useState<Repository[]>([])
   const [loadingRepos, setLoadingRepos] = useState(true)
@@ -30,9 +31,60 @@ function App() {
     }
   }
 
+  // Poll or ping backend to wake it up
+  const checkBackendHealth = async (isManual = false) => {
+    if (isManual) {
+      setBackendStatus('checking');
+    }
+    
+    let resolved = false;
+    const timeoutId = window.setTimeout(() => {
+      if (!resolved) {
+        setBackendStatus('waking');
+      }
+    }, 1500);
+
+    try {
+      const res = await apiService.checkHealth();
+      resolved = true;
+      clearTimeout(timeoutId);
+      if (res && res.status === 'ok') {
+        setBackendStatus('active');
+        loadRepositories();
+      } else {
+        throw new Error('Invalid status');
+      }
+    } catch (err) {
+      resolved = true;
+      clearTimeout(timeoutId);
+      console.error('Backend connection check failed:', err);
+      setBackendStatus('offline');
+    }
+  };
+
   useEffect(() => {
-    loadRepositories()
-  }, [])
+    checkBackendHealth();
+    
+    // Set up a periodic check every 30 seconds to keep it alive or reconnect
+    const intervalId = setInterval(() => {
+      setBackendStatus(prev => {
+        if (prev === 'active' || prev === 'offline') {
+          apiService.checkHealth()
+            .then(res => {
+              if (res && res.status === 'ok') {
+                setBackendStatus('active');
+              }
+            })
+            .catch(() => {
+              setBackendStatus('offline');
+            });
+        }
+        return prev;
+      });
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleIngest = async (repoUrl: string, repoName: string) => {
     try {
@@ -87,6 +139,49 @@ function App() {
     ? reposWithQueries.reduce((sum, r) => sum + (r.avgPrecision || 0), 0) / reposWithQueries.length 
     : 0
 
+  if (backendStatus !== 'active') {
+    return (
+      <div className="backend-loader-overlay">
+        <div className={`backend-loader-card ${backendStatus}`}>
+          <div className="backend-loader-logo">
+            <BookOpen size={32} />
+          </div>
+          <h1 className="backend-loader-title">DevScope</h1>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%' }}>
+            <div className={`backend-loader-spinner ${backendStatus}`}>
+              <div className="spinner-orbit-1"></div>
+              <div className="spinner-orbit-2"></div>
+              <div className="spinner-core"></div>
+            </div>
+            
+            <div className="backend-loader-status-text">
+              {backendStatus === 'checking' && 'Initializing Secure Connection...'}
+              {backendStatus === 'waking' && 'Waking Up Backend Services...'}
+              {backendStatus === 'offline' && 'Connection Failed'}
+            </div>
+            
+            <p className="backend-loader-desc">
+              {backendStatus === 'checking' && 'Pinging the API server to establish session.'}
+              {backendStatus === 'waking' && 'DevScope is hosted on Render free tier. The server spins down when idle and is currently starting up (this may take up to 60 seconds).'}
+              {backendStatus === 'offline' && 'Could not reach the DevScope API. Please verify the backend is running and click retry.'}
+            </p>
+
+            {backendStatus === 'offline' && (
+              <button className="backend-loader-retry-btn" onClick={() => checkBackendHealth(true)}>
+                <RefreshCw size={14} /> Try Connecting Again
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Cast backendStatus to bypass type narrowing from the early return above.
+  // In the main layout, we keep these status checks for robustness.
+  const currentStatus = backendStatus as 'checking' | 'active' | 'waking' | 'offline';
+
   return (
     <div className="app-layout">
       {/* Sidebar Backdrop Overlay on Mobile */}
@@ -123,9 +218,27 @@ function App() {
 
           <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
             <div className="sidebar-section-title">System Health</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.25rem' }}>
-              <Activity size={12} color="var(--success)" />
-              <span>Hybrid LLM inference online</span>
+            <div className="health-status-container">
+              <div className="health-status-row">
+                <span className={`health-indicator-dot ${currentStatus}`}></span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                  {currentStatus === 'active' && 'Backend Active'}
+                  {currentStatus === 'checking' && 'Checking Status...'}
+                  {currentStatus === 'waking' && 'Waking Server...'}
+                  {currentStatus === 'offline' && 'Backend Offline'}
+                </span>
+              </div>
+              <p className="health-status-message">
+                {currentStatus === 'active' && 'Hybrid LLM inference online & responsive.'}
+                {currentStatus === 'checking' && 'Pinging backend to verify connectivity.'}
+                {currentStatus === 'waking' && 'Render free tier cold-start detected. Waking up instance...'}
+                {currentStatus === 'offline' && 'Could not connect to backend server.'}
+              </p>
+              {currentStatus === 'offline' && (
+                <button className="health-retry-btn" onClick={() => checkBackendHealth(true)}>
+                  🔄 Retry Connection
+                </button>
+              )}
             </div>
           </div>
         </div>
