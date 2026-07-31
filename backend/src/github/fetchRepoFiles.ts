@@ -79,7 +79,7 @@ export async function fetchRepoFiles(
   const tree = treeRes.data.tree;
 
   const allowedExtensions = [
-    "ts", "tsx", "js", "jsx", "mjs", "cjs",
+    "ts", "js", "mjs", "cjs",
     "py",
     "java", "kt", "kts", "scala",
     "go",
@@ -109,7 +109,12 @@ export async function fetchRepoFiles(
       "assets",
       "coverage",
       "temp",
-      "tmp"
+      "tmp",
+      "frontend",
+      "client",
+      "ui",
+      "web",
+      "website"
     ];
 
     const hasIgnoredDir = pathParts.some((part: string) => {
@@ -146,6 +151,11 @@ export async function fetchRepoFiles(
       chunk.map(async (item: any) => {
         try {
           const fileRes = await axios.get(item.url, { headers });
+
+          //converts base 64 content to string of utf8 
+          //buffer stoers row binary data 
+          //fileRes.data.content has base64 that returns encoding
+          //encoding converted to string of utf8 which is readable format
           const content = Buffer.from(
             fileRes.data.content,
             "base64"

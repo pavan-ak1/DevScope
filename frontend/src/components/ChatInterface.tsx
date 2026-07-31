@@ -235,6 +235,60 @@ function RetrievedContextViewer({ context }: RetrievedContextViewerProps) {
   );
 }
 
+interface CopyResponseButtonProps {
+  text: string;
+}
+
+function CopyResponseButton({ text }: CopyResponseButtonProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy response:', err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="secondary-btn"
+      style={{
+        background: 'transparent',
+        border: 'none',
+        color: 'var(--text-muted)',
+        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.25rem',
+        fontSize: '0.72rem',
+        padding: '0.2rem 0.4rem',
+        borderRadius: '4px',
+        transition: 'all 0.15s ease',
+        outline: 'none',
+        userSelect: 'none',
+        height: 'auto'
+      }}
+      title="Copy response"
+    >
+      {copied ? (
+        <>
+          <Check size={12} style={{ color: 'var(--success)' }} />
+          <span style={{ color: 'var(--success)' }}>Copied!</span>
+        </>
+      ) : (
+        <>
+          <Copy size={12} />
+          <span>Copy Response</span>
+        </>
+      )}
+    </button>
+  );
+}
+
 interface TypewriterMessageProps {
   content: string;
   animate: boolean;
@@ -403,9 +457,20 @@ export default function ChatInterface({ repoName }: ChatInterfaceProps) {
             <>
               {messages.map((msg, index) => (
                 <div key={index} className={`message-wrapper ${msg.type}`}>
-                  <span className="message-sender">
-                    {msg.type === 'user' ? 'User' : 'DevScope AI'}
-                  </span>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: msg.type === 'user' ? 'flex-end' : 'space-between',
+                    width: '100%',
+                    marginBottom: '0.15rem'
+                  }}>
+                    <span className="message-sender">
+                      {msg.type === 'user' ? 'User' : 'DevScope AI'}
+                    </span>
+                    {msg.type === 'assistant' && (
+                      <CopyResponseButton text={msg.content} />
+                    )}
+                  </div>
                   <div className="chat-bubble">
                     <div className="message-content">
                       {msg.type === 'assistant' ? (
@@ -428,7 +493,15 @@ export default function ChatInterface({ repoName }: ChatInterfaceProps) {
 
           {loading && (
             <div className="message-wrapper assistant">
-              <span className="message-sender">DevScope AI</span>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                marginBottom: '0.15rem'
+              }}>
+                <span className="message-sender">DevScope AI</span>
+              </div>
               <div className="chat-bubble" style={{ display: 'flex', alignItems: 'center' }}>
                 <div className="typing-indicator">
                   <div className="typing-dot"></div>

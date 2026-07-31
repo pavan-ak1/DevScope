@@ -14,7 +14,7 @@ function App() {
   const [jobId, setJobId] = useState('')
   const [error, setError] = useState('')
   const [backendStatus, setBackendStatus] = useState<'checking' | 'active' | 'waking' | 'offline'>('checking')
-  
+
   const [repositories, setRepositories] = useState<Repository[]>([])
   const [loadingRepos, setLoadingRepos] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -36,7 +36,7 @@ function App() {
     if (isManual) {
       setBackendStatus('checking');
     }
-    
+
     let resolved = false;
     const timeoutId = window.setTimeout(() => {
       if (!resolved) {
@@ -64,7 +64,7 @@ function App() {
 
   useEffect(() => {
     checkBackendHealth();
-    
+
     // Set up a periodic check every 30 seconds to keep it alive or reconnect
     const intervalId = setInterval(() => {
       setBackendStatus(prev => {
@@ -133,10 +133,10 @@ function App() {
   // Calculate Aggregated Metrics
   const totalRepos = repositories.length
   const totalQueries = repositories.reduce((sum, r) => sum + (r.totalQueries || 0), 0)
-  
+
   const reposWithQueries = repositories.filter(r => r.totalQueries && r.totalQueries > 0)
-  const avgPrecision = reposWithQueries.length > 0 
-    ? reposWithQueries.reduce((sum, r) => sum + (r.avgPrecision || 0), 0) / reposWithQueries.length 
+  const avgPrecision = reposWithQueries.length > 0
+    ? reposWithQueries.reduce((sum, r) => sum + (r.avgPrecision || 0), 0) / reposWithQueries.length
     : 0
 
   if (backendStatus !== 'active') {
@@ -147,20 +147,20 @@ function App() {
             <BookOpen size={32} />
           </div>
           <h1 className="backend-loader-title">DevScope</h1>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%' }}>
             <div className={`backend-loader-spinner ${backendStatus}`}>
               <div className="spinner-orbit-1"></div>
               <div className="spinner-orbit-2"></div>
               <div className="spinner-core"></div>
             </div>
-            
+
             <div className="backend-loader-status-text">
               {backendStatus === 'checking' && 'Initializing Secure Connection...'}
               {backendStatus === 'waking' && 'Waking Up Backend Services...'}
               {backendStatus === 'offline' && 'Connection Failed'}
             </div>
-            
+
             <p className="backend-loader-desc">
               {backendStatus === 'checking' && 'Pinging the API server to establish session.'}
               {backendStatus === 'waking' && 'DevScope is hosted on Render free tier. The server spins down when idle and is currently starting up (this may take up to 60 seconds).'}
@@ -197,7 +197,7 @@ function App() {
           </div>
           <span className="sidebar-title">DevScope</span>
         </div>
-        
+
         <div className="sidebar-content">
           <div>
             <div className="sidebar-section-title">Active Workspaces</div>
@@ -249,7 +249,7 @@ function App() {
         {/* Compact Navigation Bar */}
         <header className="app-header-compact">
           <div className="app-header-info">
-            <button 
+            <button
               className="mobile-menu-toggle"
               onClick={() => setMobileMenuOpen(prev => !prev)}
               style={{
@@ -290,7 +290,7 @@ function App() {
               </>
             )}
           </div>
-          
+
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {appState !== 'select' && (
               <button onClick={handleReset} className="secondary-btn" style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem', borderRadius: 'var(--radius-sm)' }}>
@@ -310,14 +310,14 @@ function App() {
 
         {/* Dynamic Route Rendering */}
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-          
+
           {/* Welcome Screen / Stats Dashboard */}
           {appState === 'select' && (
             <div className="welcome-container">
               <div className="welcome-header">
                 <h1>DevScope Codebase Hub</h1>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem' }}>
-                  Semantic code search, multi-layered fallbacks, and real-time retrieval precision metrics.
+                  Semantic code search and real-time retrieval precision metrics.
                 </p>
               </div>
 
