@@ -79,7 +79,7 @@ export async function fetchRepoFiles(
   const tree = treeRes.data.tree;
 
   const allowedExtensions = [
-    "ts", "js", "mjs", "cjs",
+    "ts", "tsx", "js", "jsx", "mjs", "cjs",
     "py",
     "java", "kt", "kts", "scala",
     "go",
@@ -109,12 +109,7 @@ export async function fetchRepoFiles(
       "assets",
       "coverage",
       "temp",
-      "tmp",
-      "frontend",
-      "client",
-      "ui",
-      "web",
-      "website"
+      "tmp"
     ];
 
     const hasIgnoredDir = pathParts.some((part: string) => {

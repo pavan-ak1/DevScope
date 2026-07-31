@@ -6,20 +6,21 @@ import { env } from "../env.js";
 
 export async function answerQuestion(
   repoName: string,
-  question: string
+  question: string,
+  filter?: string
 ) {
   try {
     const queryEmbedding = await embedQuery(question);
 
-    const results = await hybridSearch(repoName, question, queryEmbedding, 8);
+    const results = await hybridSearch(repoName, question, queryEmbedding, 8, 60, filter);
 
-    const prompt = buildRagPrompt(question, results);
+    const { systemPrompt, userPrompt } = buildRagPrompt(question, results);
 
     console.log("Attempting Groq LLM...");
     if (!env.GROQ_API_KEY) {
       throw new Error("GROQ_API_KEY is not configured.");
     }
-    const response = await callGroq(prompt);
+    const response = await callGroq(systemPrompt, userPrompt);
     return { answer: response, context: results };
 
   } catch (err: any) {

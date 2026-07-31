@@ -343,6 +343,7 @@ export default function ChatInterface({ repoName }: ChatInterfaceProps) {
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [filterScope, setFilterScope] = useState<'all' | 'backend' | 'frontend'>('all');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -354,6 +355,7 @@ export default function ChatInterface({ repoName }: ChatInterfaceProps) {
     setMessages([]);
     setQuestion('');
     setError('');
+    setFilterScope('all');
   }, [repoName]);
 
   useEffect(() => {
@@ -377,6 +379,7 @@ export default function ChatInterface({ repoName }: ChatInterfaceProps) {
       const response: AskResponse = await apiService.askQuestion({
         repoName,
         question: qText,
+        filter: filterScope,
       });
 
       const assistantMessage: ChatMessage = {
@@ -537,6 +540,37 @@ export default function ChatInterface({ repoName }: ChatInterfaceProps) {
 
         <div className="chat-input-panel">
           <div className="chat-input-wrapper">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              marginBottom: '0.65rem',
+              fontSize: '0.75rem',
+              color: 'var(--text-muted)'
+            }}>
+              <span style={{ marginRight: '0.25rem', fontWeight: 500 }}>Search Scope:</span>
+              {(['all', 'backend', 'frontend'] as const).map((scope) => (
+                <button
+                  key={scope}
+                  type="button"
+                  onClick={() => setFilterScope(scope)}
+                  style={{
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: 'var(--radius-sm)',
+                    background: filterScope === scope ? 'rgba(79, 70, 229, 0.15)' : 'transparent',
+                    color: filterScope === scope ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    border: filterScope === scope ? '1px solid rgba(79, 70, 229, 0.4)' : '1px solid transparent',
+                    cursor: 'pointer',
+                    fontSize: '0.75rem',
+                    fontWeight: filterScope === scope ? 600 : 400,
+                    textTransform: 'capitalize',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {scope === 'all' ? 'All files' : scope}
+                </button>
+              ))}
+            </div>
             <form onSubmit={handleSubmit} className="chat-form">
               <input
                 type="text"

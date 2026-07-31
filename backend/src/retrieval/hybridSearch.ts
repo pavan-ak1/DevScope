@@ -22,9 +22,17 @@ export async function hybridSearch(
     query: string,
     queryEmbedding: number[],
     topK: number = 8,
-    k: number = 60
+    k: number = 60,
+    filter?: string
 ): Promise<ChunkResult[]> {
     const vectorStr = `[${queryEmbedding.join(",")}]`;
+
+    let filterSql = "";
+    if (filter === "backend") {
+        filterSql = "AND (file_path LIKE '%.md' OR file_path LIKE '%.mdx' OR file_path ILIKE '%readme%' OR (file_path NOT LIKE 'frontend/%' AND file_path NOT LIKE '%.tsx' AND file_path NOT LIKE '%.jsx' AND file_path NOT LIKE '%.html' AND file_path NOT LIKE '%.css'))";
+    } else if (filter === "frontend") {
+        filterSql = "AND (file_path LIKE 'frontend/%' OR file_path LIKE '%.tsx' OR file_path LIKE '%.jsx' OR file_path LIKE '%.html' OR file_path LIKE '%.css')";
+    }
 
     // 1. Run Vector Search and FTS in parallel (retrieving top 20 from each)
     const [vectorRes, ftsRes] = await Promise.all([
@@ -32,7 +40,7 @@ export async function hybridSearch(
             `
       SELECT id, file_path, content
       FROM repo_embeddings
-      WHERE repo_name = $1
+      WHERE repo_name = $1 ${filterSql}
       ORDER BY embedding <=> $2
       LIMIT 20
       `,
@@ -42,7 +50,7 @@ export async function hybridSearch(
             `
       SELECT id, file_path, content
       FROM repo_embeddings, websearch_to_tsquery('english', $2) query
-      WHERE repo_name = $1 AND search_vector @@ query
+      WHERE repo_name = $1 AND search_vector @@ query ${filterSql}
       ORDER BY ts_rank_cd(search_vector, query) DESC
       LIMIT 20
       `,

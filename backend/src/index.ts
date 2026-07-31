@@ -49,9 +49,9 @@ app.post("/ingest", async (req, res) => {
 
 app.post("/ask", async (req, res) => {
   try {
-    const { repoName, question } = req.body;
+    const { repoName, question, filter } = req.body;
 
-    const result = await answerQuestion(repoName, question);
+    const result = await answerQuestion(repoName, question, filter);
 
     await metricsQueue.add("evaluate", {
       repoName,

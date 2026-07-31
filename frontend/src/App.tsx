@@ -168,6 +168,31 @@ function App() {
             </p>
 
             {backendStatus === 'offline' && (
+              <div style={{
+                marginTop: '0.25rem',
+                padding: '0.85rem 1rem',
+                background: 'rgba(245, 158, 11, 0.06)',
+                border: '1px solid rgba(245, 158, 11, 0.15)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.8rem',
+                color: 'var(--warning)',
+                textAlign: 'left',
+                width: '100%',
+                lineHeight: 1.55,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.35rem'
+              }}>
+                <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  ⚠️ Connection Blocked?
+                </span>
+                <span>
+                  If you are using <strong>Brave Browser</strong>, your built-in Brave Shields (or other ad-blockers) may block API requests. Please try <strong>disabling Brave Shields</strong> (click the Lion icon in the address bar and turn Shields off) or open this application in <strong>Google Chrome</strong>.
+                </span>
+              </div>
+            )}
+
+            {backendStatus === 'offline' && (
               <button className="backend-loader-retry-btn" onClick={() => checkBackendHealth(true)}>
                 <RefreshCw size={14} /> Try Connecting Again
               </button>

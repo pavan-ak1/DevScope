@@ -12,6 +12,7 @@ export interface IngestResponse {
 export interface AskRequest {
   repoName: string;
   question: string;
+  filter?: 'all' | 'backend' | 'frontend';
 }
 
 export interface AskResponse {
